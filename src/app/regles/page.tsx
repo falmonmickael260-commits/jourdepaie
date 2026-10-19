@@ -106,12 +106,25 @@ export default function ReglesPage() {
         <section>
           <h2 className="font-display text-2xl text-navy-900 mb-4">Ce qui reste à valider</h2>
           <ul className="font-sans text-sm text-navy-800/70 list-disc list-inside space-y-1.5">
-            <li>Disposition exacte du plateau (nombre et nature précise des cases).</li>
-            <li>Montants réels de salaire, capital de départ, taux d&apos;intérêt.</li>
+            <li>
+              Capital de départ : sources tierces en désaccord (1 500 € contre 650 € selon le site
+              consulté) — probablement deux éditions différentes, à trancher avec la vraie notice.
+            </li>
+            <li>Salaire, barème d&apos;épargne et taux de prêt : trouvés sur des sites de règles non officiels, jamais sur la notice elle-même.</li>
+            <li>
+              Un descriptif produit mentionne un plateau proposant « le choix entre deux activités
+              par jour » — mécanique non comprise ni implémentée ici, faute de détail.
+            </li>
             <li>Paquets de cartes complets (quantités, effets, déclencheurs) par catégorie.</li>
             <li>Ordre exact des opérations de fin de mois et méthode de classement final.</li>
             <li>Règles de remboursement de prêt et de calcul des enchères.</li>
           </ul>
+          <p className="font-sans text-xs text-navy-800/45 mt-4">
+            Les pistes ci-dessus viennent de recherches sur des sites de règles tiers (non
+            officiels) — voir les références détaillées dans{" "}
+            <code className="bg-navy-900/5 px-1 rounded">src/game/rules/edition-2024.ts</code>.
+            Rien ici ne remplace la notice imprimée de l&apos;édition 2024.
+          </p>
         </section>
       </div>
     </main>

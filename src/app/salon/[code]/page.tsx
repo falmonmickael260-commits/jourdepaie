@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Copy, Check, LogOut, Play } from "lucide-react";
 import { LobbyShell } from "@/components/lobby/LobbyShell";
@@ -14,10 +14,17 @@ export default function SalonPage({ params }: { params: Promise<{ code: string }
   const { code } = use(params);
   const router = useRouter();
   const lobby = useLobbyStore((s) => s.lobby);
+  const myPlayerId = useLobbyStore((s) => s.myPlayerId);
   const leaveLobby = useLobbyStore((s) => s.leaveLobby);
   const startGame = useLobbyStore((s) => s.startGame);
   const reset = useLobbyStore((s) => s.reset);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (lobby?.code === code && lobby.started) {
+      router.replace(`/partie/${code}`);
+    }
+  }, [lobby?.code, lobby?.started, code, router]);
 
   if (!lobby || lobby.code !== code) {
     return (
@@ -30,6 +37,7 @@ export default function SalonPage({ params }: { params: Promise<{ code: string }
   }
 
   const host = lobby.players.find((p) => p.isHost);
+  const isHost = myPlayerId !== null && host?.id === myPlayerId;
 
   function copyCode() {
     navigator.clipboard?.writeText(code).then(() => {
@@ -39,8 +47,7 @@ export default function SalonPage({ params }: { params: Promise<{ code: string }
   }
 
   function handleLeave() {
-    const me = lobby?.players[lobby.players.length - 1];
-    if (me) leaveLobby(me.id);
+    leaveLobby();
     reset();
     router.push("/");
   }
@@ -73,6 +80,7 @@ export default function SalonPage({ params }: { params: Promise<{ code: string }
             <span className="flex-1 font-sans text-navy-900">
               {p.name}
               {p.isHost && <span className="ml-2 text-xs text-gold-600 font-semibold">HÔTE</span>}
+              {p.id === myPlayerId && <span className="ml-2 text-xs text-emerald-700 font-semibold">VOUS</span>}
             </span>
             <span className={`w-2 h-2 rounded-full ${p.connected ? "bg-emerald-500" : "bg-garnet-500"}`} />
           </li>
@@ -91,7 +99,7 @@ export default function SalonPage({ params }: { params: Promise<{ code: string }
         <Button variant="ghost" icon={<LogOut size={18} />} onClick={handleLeave} className="flex-1 justify-center">
           Quitter
         </Button>
-        {host && (
+        {isHost && (
           <Button
             icon={<Play size={18} />}
             onClick={handleStart}
@@ -102,8 +110,13 @@ export default function SalonPage({ params }: { params: Promise<{ code: string }
           </Button>
         )}
       </div>
-      {lobby.players.length < 2 && (
+      {isHost && lobby.players.length < 2 && (
         <p className="text-xs text-navy-800/45 font-sans mt-3">Il faut au moins 2 joueurs pour lancer la partie.</p>
+      )}
+      {!isHost && (
+        <p className="text-xs text-navy-800/45 font-sans mt-3">
+          En attente que l&apos;hôte ({host?.name}) lance la partie.
+        </p>
       )}
     </LobbyShell>
   );

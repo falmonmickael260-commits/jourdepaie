@@ -43,22 +43,38 @@ export interface EconomyRules {
  * communiquées au joueur comme des règles confirmées.
  */
 export const economyRules: EconomyRules = {
-  startingCash: rule(2000, "pending", {
-    reference: "non vérifié — notice requise",
-    note: "Placeholder d'amorçage pour les tests d'interface uniquement.",
+  startingCash: rule(1500, "pending", {
+    reference: "sources tierces non officielles, non la notice elle-même (voir note)",
+    note:
+      "Deux montants circulent selon les sites de règles consultés : 1 500 € " +
+      "(détaillé comme 2 billets de 500 €, 3 de 100 €, 4 de 50 € — regles-du-jeu.net) " +
+      "contre 650 € ailleurs (lemagloisirs.fr), probablement une édition antérieure. " +
+      "Retenu ici : 1 500 €, le plus précisément détaillé et le plus recoupé, mais " +
+      "AUCUNE de ces sources n'est la notice officielle de l'édition 2024 — à confirmer.",
   }),
-  salary: rule(400, "pending", {
-    reference: "non vérifié — notice requise",
+  salary: rule(1500, "pending", {
+    reference: "sources tierces non officielles (voir note)",
+    note: "« Recevez 1 500 € de la banque » au Jour de Paye, selon regles-du-jeu.net. Non confirmé contre la notice officielle.",
   }),
-  savingsInterestRate: rule(0.02, "pending", {
-    reference: "non vérifié — notice requise",
+  savingsInterestRate: rule(0.25, "pending", {
+    reference: "sources tierces non officielles (voir note)",
+    note:
+      "Un barème (200 €→50 €, 500 €→125 €, 1000 €→250 €, 1500 €→375 €, 2000 €→500 €, " +
+      "3000 €→750 €, 5000 €→1250 €) est cité par regles-du-jeu.net ; chaque palier " +
+      "correspond exactement à 25 %, d'où cette valeur. Barème à vérifier tel quel " +
+      "contre la notice plutôt que ce seul taux.",
   }),
-  debtInterestRate: rule(0.05, "pending", {
-    reference: "non vérifié — notice requise",
+  debtInterestRate: rule(0.1, "pending", {
+    reference: "sources tierces non officielles (voir note)",
+    note: "« Versez 10 % d'intérêts sur le solde restant dû » selon regles-du-jeu.net. Non confirmé contre la notice officielle.",
   }),
   daysPerMonth: rule(31, "pending", {
-    reference: "non vérifié — estimé par comptage visuel sur photo d'un plateau physique de référence",
-    note: "31 cases numérotées observées sur la spirale du plateau de référence, en plus de la case Départ. À confirmer contre la notice (le traitement des mois de moins de 31 jours n'est pas connu).",
+    reference: "recoupé sur deux sources indépendantes (voir note)",
+    note:
+      "31 cases numérotées + 1 case Départ (32 cases au total) : confirmé à la fois par " +
+      "comptage visuel sur photo d'un plateau physique de référence ET par lemagloisirs.fr " +
+      "(« un plateau de jeu composé de 32 cases : 31 représentant les jours du mois plus " +
+      "une case départ »). Concordance forte, mais toujours pas la notice elle-même.",
   }),
   monthsPerGame: rule(3, "confirmed", {
     reference: "Brief projet — durée de partie fixée par le cahier des charges",

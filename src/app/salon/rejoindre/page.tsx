@@ -19,7 +19,9 @@ export default function RejoindreSalonPage() {
     if (!name.trim() || code.trim().length < 4) return;
     const ok = joinLobby(code.trim().toUpperCase(), name.trim());
     if (!ok) {
-      setError("Ce salon est complet ou la partie a déjà commencé.");
+      setError(
+        "Salon introuvable sur cet appareil, complet, ou déjà commencé. Le code doit avoir été créé dans un autre onglet de ce même navigateur (voir la note sur le multijoueur réel)."
+      );
       return;
     }
     router.push(`/salon/${code.trim().toUpperCase()}`);
@@ -45,9 +47,9 @@ export default function RejoindreSalonPage() {
           <input
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            maxLength={6}
+            maxLength={4}
             required
-            placeholder="Ex. 7K2PQZ"
+            placeholder="Ex. 7K2Q"
             className="rounded-lg border border-navy-900/15 px-3.5 py-2.5 font-ledger tracking-[0.3em] text-navy-900 bg-ivory-50 focus:outline-none focus:ring-2 focus:ring-gold-500/50 uppercase"
           />
         </label>
