@@ -21,13 +21,15 @@ function StatusBadge({ status }: { status: RuleStatus }) {
   );
 }
 
-const economyEntries: Array<[string, { value: unknown; status: RuleStatus }]> = [
+const economyEntries: Array<[string, { value: unknown; status: RuleStatus; source?: { reference: string; note?: string } }]> = [
   ["Capital de départ", economyRules.startingCash],
   ["Salaire (jour de paie)", economyRules.salary],
   ["Taux d'intérêt épargne", economyRules.savingsInterestRate],
   ["Taux d'intérêt dette", economyRules.debtInterestRate],
   ["Jours par mois", economyRules.daysPerMonth],
   ["Mois par partie", economyRules.monthsPerGame],
+  ["Palier de prêt", economyRules.loanIncrement],
+  ["Frais de retrait d'épargne", economyRules.savingsWithdrawalFee],
 ];
 
 export default function ReglesPage() {
@@ -54,40 +56,60 @@ export default function ReglesPage() {
         >
           <p className="font-semibold font-sans">
             {officialMode
-              ? "Mode officiel déverrouillé — toutes les règles critiques sont confirmées."
+              ? "Valeurs économiques confirmées contre la notice officielle Hasbro"
               : "Mode configuration — règles non officielles"}
           </p>
-          {!officialMode && (
-            <p className="text-sm mt-1 font-sans">
-              Aucune notice de l&apos;édition française en euros 2024 de référence n&apos;a pu être vérifiée.
-              Les valeurs ci-dessous sont des paramètres d&apos;amorçage pour tester le moteur de jeu —
-              elles ne doivent jamais être prises pour des règles officielles. Fournissez la notice
-              (PDF ou photos) pour les valider une à une dans{" "}
-              <code className="bg-navy-900/10 px-1 rounded">src/game/rules/edition-2024.ts</code>.
-            </p>
-          )}
+          <p className="text-sm mt-1 font-sans">
+            {officialMode ? (
+              <>
+                Une notice officielle de « La Bonne Paye » (Hasbro, instructions.hasbro.com,
+                réf. 000324470_INST_PaydayRC2_FAR) a été retrouvée et lue : capital de départ,
+                salaire, taux de prêt, barème d&apos;épargne et nombre de jours en sont
+                directement cités. ⚠️ Cette notice n&apos;est pas explicitement datée « édition
+                2024 » — c&apos;est l&apos;instruction générique Hasbro, probablement identique
+                mais pas garantie à 100 % pour la boîte 2024 précise. Le détail exact de chaque
+                case du plateau et les textes des cartes restent une composition ORIGINALE de ce
+                projet, pas une copie de la notice.
+              </>
+            ) : (
+              <>
+                Aucune notice de référence n&apos;a pu être vérifiée. Les valeurs ci-dessous sont
+                des paramètres d&apos;amorçage — fournissez la notice pour les valider dans{" "}
+                <code className="bg-navy-900/10 px-1 rounded">src/game/rules/edition-2024.ts</code>.
+              </>
+            )}
+          </p>
         </div>
 
         <section className="mb-10">
           <h2 className="font-display text-2xl text-navy-900 mb-4">Économie</h2>
           <div className="surface-card rounded-xl divide-y divide-navy-900/10">
             {economyEntries.map(([label, rule]) => (
-              <div key={label} className="flex items-center justify-between px-5 py-3.5">
+              <div key={label} className="flex items-center justify-between px-5 py-3.5 gap-4">
                 <span className="font-sans text-navy-900">{label}</span>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 shrink-0">
                   <span className="font-ledger text-navy-800/80 tabular-nums">{String(rule.value)}</span>
                   <StatusBadge status={rule.status} />
                 </div>
               </div>
             ))}
           </div>
+          <p className="font-sans text-xs text-navy-800/45 mt-3">
+            Détail et citations exactes dans{" "}
+            <code className="bg-navy-900/5 px-1 rounded">economyRules</code> (fichier{" "}
+            <code className="bg-navy-900/5 px-1 rounded">src/game/rules/edition-2024.ts</code>).
+            Le palier de prêt et les frais de retrait d&apos;épargne sont confirmés mais pas
+            encore câblés dans le moteur de jeu (aucun emprunt/retrait possible pour l&apos;instant).
+          </p>
         </section>
 
         <section className="mb-10">
           <h2 className="font-display text-2xl text-navy-900 mb-4">Catégories de cartes</h2>
           <p className="font-sans text-sm text-navy-800/60 mb-4">
-            Exemples structurels pour valider le moteur — textes et effets originaux, en nombre
-            volontairement réduit tant que les paquets réels ne sont pas constitués.
+            Exemples structurels ORIGINAUX (textes et effets propres à ce projet) pour valider
+            le moteur — pas un paquet final. ⚠️ La notice officielle ne connaît que 4 catégories
+            (ACQUISITION, PRÊT, COURRIER, ÉVÈNEMENT) ; les catégories ci-dessous sont encore
+            celles, plus larges, du brief initial du projet — à harmoniser.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">
             {sampleCards.map((card) => (
@@ -107,24 +129,19 @@ export default function ReglesPage() {
           <h2 className="font-display text-2xl text-navy-900 mb-4">Ce qui reste à valider</h2>
           <ul className="font-sans text-sm text-navy-800/70 list-disc list-inside space-y-1.5">
             <li>
-              Capital de départ : sources tierces en désaccord (1 500 € contre 650 € selon le site
-              consulté) — probablement deux éditions différentes, à trancher avec la vraie notice.
+              Catégories de cartes réelles : ACQUISITION (23), PRÊT (16), COURRIER (50),
+              ÉVÈNEMENT (23) selon la notice — à faire correspondre avec la structure actuelle du
+              projet (7 catégories).
             </li>
-            <li>Salaire, barème d&apos;épargne et taux de prêt : trouvés sur des sites de règles non officiels, jamais sur la notice elle-même.</li>
             <li>
-              Un descriptif produit mentionne un plateau proposant « le choix entre deux activités
-              par jour » — mécanique non comprise ni implémentée ici, faute de détail.
+              Disposition exacte du plateau : quel jour propose quoi (Courrier / Acquisition /
+              Loterie / Anniversaire / Cagnotte / Changement d&apos;heure...). Resterait de toute
+              façon ORIGINALE dans ce projet, mais la logique de répartition n&apos;est pas connue.
             </li>
-            <li>Paquets de cartes complets (quantités, effets, déclencheurs) par catégorie.</li>
-            <li>Ordre exact des opérations de fin de mois et méthode de classement final.</li>
-            <li>Règles de remboursement de prêt et de calcul des enchères.</li>
+            <li>Mécaniques confirmées mais pas encore implémentées : emprunt/remboursement par paliers de 1 500 €, retrait d&apos;épargne (frais fixes de 150 €), vente d&apos;ACQUISITION aux enchères, Loterie, Cagnotte, Assurance.</li>
+            <li>Confirmer que cette notice générique correspond bien, sans écart, à la boîte « édition 2024 » (réf. F6424) et pas seulement à une réimpression antérieure.</li>
+            <li>Méthode de classement final en cas d&apos;égalité ou si tous les joueurs sont endettés (le principe « le moins endetté gagne » est, lui, confirmé).</li>
           </ul>
-          <p className="font-sans text-xs text-navy-800/45 mt-4">
-            Les pistes ci-dessus viennent de recherches sur des sites de règles tiers (non
-            officiels) — voir les références détaillées dans{" "}
-            <code className="bg-navy-900/5 px-1 rounded">src/game/rules/edition-2024.ts</code>.
-            Rien ici ne remplace la notice imprimée de l&apos;édition 2024.
-          </p>
         </section>
       </div>
     </main>

@@ -50,5 +50,35 @@ export function resolveCardEffect(
     });
   }
 
+  if (effect.type === "payment-per-player") {
+    const others = state.players.filter((p) => p.id !== activePlayer.id);
+    let next = state;
+    for (const other of others) {
+      const pairId = `${txId}-${other.id}`;
+      if (effect.direction === "from-each-player") {
+        next = applyTransaction(next, {
+          id: `${pairId}-debit`,
+          playerId: other.id,
+          reason: card.title,
+          mutate: (acc) => debitCash(acc, effect.amount),
+        });
+        next = applyTransaction(next, {
+          id: `${pairId}-credit`,
+          playerId: activePlayer.id,
+          reason: card.title,
+          mutate: (acc) => creditCash(acc, effect.amount),
+        });
+      } else {
+        next = applyTransaction(next, {
+          id: `${pairId}-debit`,
+          playerId: activePlayer.id,
+          reason: card.title,
+          mutate: (acc) => debitCash(acc, effect.amount),
+        });
+      }
+    }
+    return next;
+  }
+
   return state;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const HALF = 26;
@@ -48,24 +47,22 @@ const FACE_END_ROTATION: Record<number, { x: number; y: number }> = {
 };
 
 export function Die({ value, rolling }: { value: number; rolling: boolean }) {
-  const spinCount = useRef(0);
-  const [rotation, setRotation] = useState(FACE_END_ROTATION[value] ?? FACE_END_ROTATION[1]);
-
-  useEffect(() => {
-    if (!rolling) {
-      spinCount.current += 1;
-      const end = FACE_END_ROTATION[value] ?? FACE_END_ROTATION[1];
-      const turns = spinCount.current % 2 === 0 ? 1 : -1;
-      setRotation({ x: end.x + turns * 360, y: end.y + 360 });
-    }
-  }, [value, rolling]);
+  // La face à montrer est calculée DIRECTEMENT depuis les props à chaque
+  // rendu — jamais via un état local dérivé à resynchroniser dans un effet.
+  // C'est cet ancien état dérivé qui pouvait rester bloqué sur la face "1"
+  // au tout premier rendu d'un nouveau tour, alors même que la valeur
+  // réellement stockée (et le déplacement du pion) était la bonne : seul
+  // l'affichage du dé se trompait.
+  const end = FACE_END_ROTATION[value] ?? FACE_END_ROTATION[1];
+  const target = { rotateX: end.x, rotateY: end.y };
 
   return (
     <div style={{ perspective: 320 }} className="w-[52px] h-[52px]">
       <motion.div
         className={cn("relative w-full h-full", rolling && "ejdp-die-tumble")}
         style={{ transformStyle: "preserve-3d" }}
-        animate={rolling ? undefined : { rotateX: rotation.x, rotateY: rotation.y }}
+        initial={false}
+        animate={rolling ? undefined : target}
         transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
       >
         <Face value={1} transform={`translateZ(${HALF}px)`} />

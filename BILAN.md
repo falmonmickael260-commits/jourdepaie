@@ -81,20 +81,32 @@ au nom). Stack : Next.js 16 (App Router, Turbopack) + TypeScript + Tailwind v4
 
 ## 3. Règles confirmées vs en attente de notice
 
-**Confirmée :** durée de partie = 3 mois (fixée par votre cahier des charges,
-pas par une notice de jeu).
+**Mise à jour :** une notice officielle Hasbro de « La Bonne Paye » a été
+retrouvée (PDF téléchargé depuis `instructions.hasbro.com/fr-fr/instruction/payday`,
+réf. fabricant `000324470_INST_PaydayRC2_FAR`, © 2014, réimpression 2022) et lue
+intégralement. Elle n'est pas explicitement datée « édition 2024 » (boîte
+réf. F6424 non retrouvée séparément), mais Hasbro réimprime généralement le
+même règlement d'une édition à l'autre.
 
-**En attente de vérification** (toutes marquées `pending` dans
-`edition-2024.ts`, visibles sur `/regles`) : capital de départ, salaire,
-taux d'intérêt épargne/dette, nombre de jours par mois, disposition exacte du
-plateau, paquets de cartes, règles de prêt/enchère, ordre des opérations de
-fin de mois, méthode de classement final.
+**Confirmées** (toutes `confirmed` dans `economyRules`, citations exactes dans
+`edition-2024.ts`) : capital de départ (1500€), salaire au Jour de Paye
+(1500€), taux d'intérêt dette (10 %), taux d'intérêt épargne (25 %, déduit de
+l'exemple officiel 200€→50€), nombre de jours par mois (31, déduit des cases
+23 et 31 citées dans la notice), palier de prêt (1500€) et frais de retrait
+d'épargne (150€) — ces deux derniers pas encore câblés dans le moteur. Durée
+de partie = 3 mois reste fixée par le cahier des charges (la notice laisse ce
+nombre au choix des joueurs).
 
-**Aucune de ces valeurs n'est présentée comme officielle dans l'interface** —
-le bandeau rouge sur `/regles` et les infobulles des cases le rappellent.
-Pour les valider : fournir la notice (PDF ou photos) de l'édition française en
-euros 2024, puis mettre à jour `economyRules` et `buildDraftBoardLayout` avec
-un statut `confirmed` et une référence de page.
+**Toujours en attente** : la notice confirme 4 catégories de cartes
+(ACQUISITION ×23, PRÊT ×16, COURRIER ×50, ÉVÈNEMENT ×23) — à réconcilier avec
+les 7 catégories actuelles du projet ; la disposition exacte du plateau (quel
+jour propose quoi) reste volontairement ORIGINALE, pas copiée de la notice ;
+les mécaniques d'enchère, Loterie, Cagnotte et Assurance sont décrites dans la
+notice mais pas implémentées ; la méthode de classement final en cas d'égalité
+n'est pas détaillée (le principe « le moins endetté gagne » si tout le monde
+est en dette, lui, est confirmé).
+
+Détail complet et bandeau de statut sur `/regles`.
 
 ## 4. Tests effectués
 

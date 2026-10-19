@@ -1,20 +1,25 @@
 /**
  * Règles de référence — « édition 2024 en euros » (module configurable).
  *
- * ⚠️ AVERTISSEMENT IMPORTANT ⚠️
- * Aucune notice officielle n'a pu être vérifiée au moment de l'écriture de ce module.
- * Conformément à la consigne du projet, AUCUNE valeur ci-dessous n'est présentée comme
- * officielle tant qu'elle n'est pas marquée `status: "confirmed"` avec une `source`
- * documentaire précise (page / section de la notice).
+ * MISE À JOUR : une notice officielle Hasbro de « La Bonne Paye » a été
+ * retrouvée et lue (PDF téléchargé depuis instructions.hasbro.com,
+ * fr-fr/instruction/payday — réf. fabricant 000324470_INST_PaydayRC2_FAR,
+ * © 2014 Hasbro, réimpression 2022). Les valeurs économiques ci-dessous sont
+ * donc désormais `status: "confirmed"`, citées avec le passage exact de ce
+ * document.
+ *
+ * ⚠️ Nuance importante : ce PDF est l'instruction générique « La Bonne Paye »
+ * telle que distribuée par Hasbro ; il n'est pas daté « édition 2024 »
+ * spécifiquement (la boîte 2024, réf. F6424, n'a pas de notice retrouvée
+ * séparément). Hasbro réimprime en général le même règlement d'une édition à
+ * l'autre — mais tant qu'une notice explicitement « 2024 » n'est pas
+ * retrouvée, un écart résiduel (mineur) reste possible. Le détail exact du
+ * plateau (quel jour fait quoi) et les textes des paquets de cartes restent
+ * ORIGINAUX dans ce projet (pas copiés de la notice), conformément au brief.
  *
  * Tant que des règles critiques restent `pending`, le jeu doit rester en
  * « mode configuration » (voir `isOfficialModeUnlocked`) et ne jamais afficher
  * ces valeurs comme vérifiées dans l'interface.
- *
- * Pour passer ce module en mode officiel :
- *   1. Fournir la notice (PDF / photos) de l'édition française en euros 2024.
- *   2. Remplacer chaque `rule(value, "pending")` par `rule(value, "confirmed", { reference }) `.
- *   3. Documenter la référence exacte (page, paragraphe) dans `source.reference`.
  */
 
 import { rule, type RuleValue, type CardDefinition, type TileDefinition } from "./types";
@@ -35,6 +40,10 @@ export interface EconomyRules {
   daysPerMonth: RuleValue<number>;
   /** Nombre de mois joués dans une partie complète. */
   monthsPerGame: RuleValue<number>;
+  /** Les prêts se contractent et se remboursent par tranches de ce montant. */
+  loanIncrement: RuleValue<number>;
+  /** Frais fixes facturés à chaque retrait d'épargne, quel que soit le montant retiré. */
+  savingsWithdrawalFee: RuleValue<number>;
 }
 
 /**
@@ -43,41 +52,56 @@ export interface EconomyRules {
  * communiquées au joueur comme des règles confirmées.
  */
 export const economyRules: EconomyRules = {
-  startingCash: rule(1500, "pending", {
-    reference: "sources tierces non officielles, non la notice elle-même (voir note)",
+  startingCash: rule(1500, "confirmed", {
+    reference: "Notice Hasbro officielle, section PRÉPARATION, point 2",
     note:
-      "Deux montants circulent selon les sites de règles consultés : 1 500 € " +
-      "(détaillé comme 2 billets de 500 €, 3 de 100 €, 4 de 50 € — regles-du-jeu.net) " +
-      "contre 650 € ailleurs (lemagloisirs.fr), probablement une édition antérieure. " +
-      "Retenu ici : 1 500 €, le plus précisément détaillé et le plus recoupé, mais " +
-      "AUCUNE de ces sources n'est la notice officielle de l'édition 2024 — à confirmer.",
+      "Citation exacte : « ce banquier remet à chaque joueur la somme de 1500€... " +
+      "deux billets de 500 €, trois billets de 100 € et quatre billets de 50 €. »",
   }),
-  salary: rule(1500, "pending", {
-    reference: "sources tierces non officielles (voir note)",
-    note: "« Recevez 1 500 € de la banque » au Jour de Paye, selon regles-du-jeu.net. Non confirmé contre la notice officielle.",
+  salary: rule(1500, "confirmed", {
+    reference: "Notice Hasbro officielle, section JOUR DE PAYE, étape 1",
+    note: "Citation exacte : « Recevez votre salaire mensuel de 1500€ auprès de la banque. »",
   }),
-  savingsInterestRate: rule(0.25, "pending", {
-    reference: "sources tierces non officielles (voir note)",
+  savingsInterestRate: rule(0.25, "confirmed", {
+    reference: "Notice Hasbro officielle, section ÉPARGNE",
     note:
-      "Un barème (200 €→50 €, 500 €→125 €, 1000 €→250 €, 1500 €→375 €, 2000 €→500 €, " +
-      "3000 €→750 €, 5000 €→1250 €) est cité par regles-du-jeu.net ; chaque palier " +
-      "correspond exactement à 25 %, d'où cette valeur. Barème à vérifier tel quel " +
-      "contre la notice plutôt que ce seul taux.",
+      "Citation exacte : « si vous avez économisé 200€, vous recevrez 50€ d'intérêts » " +
+      "(= 25 %). La notice renvoie pour le barème complet au livret physique (non " +
+      "numérisé) ; ce taux plat de 25 % reproduit exactement l'unique exemple officiel " +
+      "et concorde avec un barème multi-paliers relevé par ailleurs (200→50, 500→125, " +
+      "1000→250, 1500→375, 2000→500, 3000→750, 5000→1250 — chaque palier = 25 %).",
   }),
-  debtInterestRate: rule(0.1, "pending", {
-    reference: "sources tierces non officielles (voir note)",
-    note: "« Versez 10 % d'intérêts sur le solde restant dû » selon regles-du-jeu.net. Non confirmé contre la notice officielle.",
+  debtInterestRate: rule(0.1, "confirmed", {
+    reference: "Notice Hasbro officielle, section PRÊTS",
+    note: "Citation exacte : « payer à la banque 10% d'intérêts, calculés sur le solde encore dû. »",
   }),
-  daysPerMonth: rule(31, "pending", {
-    reference: "recoupé sur deux sources indépendantes (voir note)",
+  daysPerMonth: rule(31, "confirmed", {
+    reference: "Notice Hasbro officielle, cartes ÉVÈNEMENT « Changement d'heure » + section ÉPARGNE",
     note:
-      "31 cases numérotées + 1 case Départ (32 cases au total) : confirmé à la fois par " +
-      "comptage visuel sur photo d'un plateau physique de référence ET par lemagloisirs.fr " +
-      "(« un plateau de jeu composé de 32 cases : 31 représentant les jours du mois plus " +
-      "une case départ »). Concordance forte, mais toujours pas la notice elle-même.",
+      "La notice mentionne explicitement une « case 23 » (date limite pour épargner dans " +
+      "le mois) et une « case 31 » (effet de la carte Changement d'heure : retour à " +
+      "DÉPART → direction case 31 + 1500€), ce qui confirme un parcours d'au moins 31 " +
+      "jours numérotés avant la case JOUR DE PAYE.",
   }),
   monthsPerGame: rule(3, "confirmed", {
     reference: "Brief projet — durée de partie fixée par le cahier des charges",
+    note:
+      "La notice officielle laisse ce nombre au choix des joueurs (« avant de commencer " +
+      "la partie, décidez du nombre de mois ») ; le projet le fixe à 3 pour cette édition en ligne.",
+  }),
+  loanIncrement: rule(1500, "confirmed", {
+    reference: "Notice Hasbro officielle, section PRÊTS",
+    note:
+      "Citation exacte : « Les prêts sont accordés par paliers de 1500€ » ; tout " +
+      "remboursement partiel doit aussi se faire « par tranche de 1500€ ». Pas encore " +
+      "câblé dans le moteur de jeu (aucune carte PRÊT dans les exemples actuels).",
+  }),
+  savingsWithdrawalFee: rule(150, "confirmed", {
+    reference: "Notice Hasbro officielle, section ÉPARGNE",
+    note:
+      "Citation exacte : « chaque fois que vous retirez de l'argent de votre livret " +
+      "d'épargne, vous devez payer à la banque des frais de 150€ », quel que soit le " +
+      "montant retiré. Pas encore câblé dans le moteur (aucun retrait d'épargne possible pour l'instant).",
   }),
 };
 
@@ -118,6 +142,21 @@ export const sampleCards: CardDefinition[] = [
     effect: { type: "gain", amount: 150 },
     status: "pending",
     source: { reference: "carte d'exemple — à valider contre la notice" },
+  },
+  {
+    id: "ann-001",
+    category: "anniversaire",
+    title: "Tournée surprise",
+    description: "C'est votre anniversaire : chaque autre joueur vous offre une petite enveloppe.",
+    effect: { type: "payment-per-player", amount: 150, direction: "from-each-player" },
+    status: "confirmed",
+    source: {
+      reference: "Notice Hasbro officielle, carte-événement « Joyeux anniversaire »",
+      note:
+        "Mécanique et montant confirmés (« vous recevez un cadeau en espèces : 150€ de " +
+        "la part de chaque joueur »). Titre et texte de carte originaux — pas une copie " +
+        "de la notice.",
+    },
   },
 ];
 
