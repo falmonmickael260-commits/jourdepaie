@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "en-jour-de-paie-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "PORT=3417 node server.mjs"],
+      "port": 3417
     }
   ]
 }

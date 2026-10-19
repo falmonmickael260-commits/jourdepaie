@@ -12,12 +12,21 @@ export default function CreerSalonPage() {
   const createLobby = useLobbyStore((s) => s.createLobby);
   const [name, setName] = useState("");
   const [maxPlayers, setMaxPlayers] = useState(4);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
-    const code = createLobby(name.trim(), maxPlayers);
-    router.push(`/salon/${code}`);
+    if (!name.trim() || loading) return;
+    setError(null);
+    setLoading(true);
+    const result = await createLobby(name.trim(), maxPlayers);
+    setLoading(false);
+    if (!result.ok) {
+      setError("Connexion au serveur de salons impossible. Réessayez dans un instant.");
+      return;
+    }
+    router.push(`/salon/${result.code}`);
   }
 
   return (
@@ -56,12 +65,16 @@ export default function CreerSalonPage() {
         </label>
 
         <p className="text-xs text-navy-800/45 font-sans leading-relaxed">
-          Durée de partie : 3 mois (fixée par les règles du projet). Salon local à
-          cet onglet tant que le serveur multijoueur n&apos;est pas connecté.
+          Durée de partie : 3 mois (fixée par les règles du projet). Le salon est
+          partagé en temps réel avec les autres appareils via le serveur — la
+          partie elle-même (dés, cartes, tours) reste en revanche simulée
+          localement sur chaque appareil une fois lancée.
         </p>
 
-        <Button type="submit" icon={<DoorOpen size={18} />} className="w-full justify-center">
-          Créer le salon
+        {error && <p className="text-sm text-garnet-600">{error}</p>}
+
+        <Button type="submit" icon={<DoorOpen size={18} />} className="w-full justify-center" disabled={loading}>
+          {loading ? "Connexion…" : "Créer le salon"}
         </Button>
       </form>
     </LobbyShell>

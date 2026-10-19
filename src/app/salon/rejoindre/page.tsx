@@ -4,8 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LobbyShell } from "@/components/lobby/LobbyShell";
 import { Button } from "@/components/ui/Button";
-import { useLobbyStore } from "@/game/store/useLobbyStore";
+import { useLobbyStore, type JoinError } from "@/game/store/useLobbyStore";
 import { KeyRound } from "lucide-react";
+
+const ERROR_LABEL: Record<JoinError, string> = {
+  "not-found": "Aucun salon avec ce code n'est actif en ce moment. Vérifiez le code auprès de l'hôte.",
+  full: "Ce salon est déjà complet.",
+  started: "La partie a déjà commencé, impossible de rejoindre.",
+  connection: "Connexion au serveur de salons impossible. Réessayez dans un instant.",
+  unknown: "Impossible de rejoindre ce salon.",
+};
 
 export default function RejoindreSalonPage() {
   const router = useRouter();
@@ -13,15 +21,17 @@ export default function RejoindreSalonPage() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || code.trim().length < 4) return;
-    const ok = joinLobby(code.trim().toUpperCase(), name.trim());
-    if (!ok) {
-      setError(
-        "Salon introuvable sur cet appareil, complet, ou déjà commencé. Le code doit avoir été créé dans un autre onglet de ce même navigateur (voir la note sur le multijoueur réel)."
-      );
+    if (!name.trim() || code.trim().length < 4 || loading) return;
+    setError(null);
+    setLoading(true);
+    const result = await joinLobby(code.trim().toUpperCase(), name.trim());
+    setLoading(false);
+    if (!result.ok) {
+      setError(ERROR_LABEL[result.error]);
       return;
     }
     router.push(`/salon/${code.trim().toUpperCase()}`);
@@ -56,8 +66,8 @@ export default function RejoindreSalonPage() {
 
         {error && <p className="text-sm text-garnet-600">{error}</p>}
 
-        <Button type="submit" icon={<KeyRound size={18} />} className="w-full justify-center">
-          Rejoindre
+        <Button type="submit" icon={<KeyRound size={18} />} className="w-full justify-center" disabled={loading}>
+          {loading ? "Connexion…" : "Rejoindre"}
         </Button>
       </form>
     </LobbyShell>

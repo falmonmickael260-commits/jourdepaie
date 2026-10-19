@@ -1,19 +1,18 @@
 "use client";
 
 /**
- * Salon partagé entre onglets/fenêtres d'un même navigateur, via
- * localStorage + BroadcastChannel (synchrone, sans serveur). Cela permet de
- * tester réellement "créer d'un côté / rejoindre de l'autre" sur un seul
- * ordinateur (deux onglets).
+ * Salon multijoueur RÉEL : parle à un petit serveur WebSocket (voir
+ * `server.mjs`, monté sur `/ws`), qui garde l'état des salons en mémoire
+ * côté serveur et le diffuse à tous les appareils connectés au même code.
  *
- * ⚠️ Cela reste local à CET ordinateur. Pour qu'une autre personne, sur un
- * autre appareil, rejoigne réellement la partie par le code, il faut un vrai
- * serveur (Supabase Realtime — voir supabase/README.md). Sans ça, deux
- * appareils différents ne peuvent pas se voir : ce n'est pas encore branché.
+ * Ça fonctionne entre appareils différents (pas seulement entre onglets du
+ * même navigateur), tant que le serveur déployé exécute bien `server.mjs`
+ * (voir package.json : "start"). ⚠️ État en mémoire seulement : un
+ * redémarrage du serveur efface les salons en cours — ce n'est pas encore
+ * une persistance en base de données.
  */
 
 import { create } from "zustand";
-import { nanoid } from "nanoid";
 
 export interface LobbyPlayer {
   id: string;
@@ -29,116 +28,138 @@ export interface LobbyState {
   started: boolean;
 }
 
+export type JoinError = "not-found" | "full" | "started" | "connection" | "unknown";
+
 interface LobbyStore {
   lobby: LobbyState | null;
-  /** Identifiant du joueur local dans CET onglet (pour "Quitter", distinguer "soi" des autres). */
   myPlayerId: string | null;
-  createLobby: (hostName: string, maxPlayers: number) => string;
-  joinLobby: (code: string, name: string) => boolean;
+  connected: boolean;
+  createLobby: (hostName: string, maxPlayers: number) => Promise<{ ok: true; code: string } | { ok: false; error: JoinError }>;
+  joinLobby: (code: string, name: string) => Promise<{ ok: true } | { ok: false; error: JoinError }>;
   leaveLobby: () => void;
   startGame: () => void;
   reset: () => void;
 }
 
-const STORAGE_PREFIX = "ejdp-lobby-";
-const CHANNEL_NAME = "ejdp-lobby-sync";
+type ServerMessage =
+  | { type: "created"; code: string; playerId: string; lobby: LobbyState }
+  | { type: "joined"; code: string; playerId: string; lobby: LobbyState }
+  | { type: "lobby"; lobby: LobbyState }
+  | { type: "error"; message: JoinError };
 
-function generateCode(): string {
-  // Pas de 0/O/1/I/L pour rester lisible à l'oral comme à l'écrit.
-  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 4 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+let socket: WebSocket | null = null;
+let connecting: Promise<WebSocket> | null = null;
+let pending: { resolve: (msg: ServerMessage) => void; reject: (err: Error) => void } | null = null;
+
+function wsUrl(): string {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${window.location.host}/ws`;
 }
 
-function readPersisted(code: string): LobbyState | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_PREFIX + code);
-    return raw ? (JSON.parse(raw) as LobbyState) : null;
-  } catch {
-    return null;
+function handleMessage(msg: ServerMessage) {
+  if (msg.type === "created" || msg.type === "joined") {
+    useLobbyStore.setState({ lobby: msg.lobby, myPlayerId: msg.playerId });
+    pending?.resolve(msg);
+    pending = null;
+    return;
+  }
+  if (msg.type === "lobby") {
+    const current = useLobbyStore.getState().lobby;
+    if (current && current.code === msg.lobby.code) {
+      useLobbyStore.setState({ lobby: msg.lobby });
+    }
+    return;
+  }
+  if (msg.type === "error") {
+    pending?.reject(new Error(msg.message));
+    pending = null;
   }
 }
 
-function persist(lobby: LobbyState) {
-  if (typeof window === "undefined" || !lobby.code) return;
-  window.localStorage.setItem(STORAGE_PREFIX + lobby.code, JSON.stringify(lobby));
-  getChannel()?.postMessage({ code: lobby.code });
-}
+function connect(): Promise<WebSocket> {
+  if (socket && socket.readyState === WebSocket.OPEN) return Promise.resolve(socket);
+  if (connecting) return connecting;
 
-let channel: BroadcastChannel | null = null;
-function getChannel(): BroadcastChannel | null {
-  if (typeof window === "undefined" || typeof BroadcastChannel === "undefined") return null;
-  if (!channel) channel = new BroadcastChannel(CHANNEL_NAME);
-  return channel;
-}
+  connecting = new Promise<WebSocket>((resolve, reject) => {
+    const ws = new WebSocket(wsUrl());
 
-export const useLobbyStore = create<LobbyStore>((set, get) => {
-  if (typeof window !== "undefined") {
-    getChannel()?.addEventListener("message", (event: MessageEvent<{ code: string }>) => {
-      const current = get().lobby;
-      if (!current || current.code !== event.data?.code) return;
-      const fresh = readPersisted(current.code);
-      if (fresh) set({ lobby: fresh });
+    ws.addEventListener("open", () => {
+      socket = ws;
+      useLobbyStore.setState({ connected: true });
+      connecting = null;
+      resolve(ws);
     });
-  }
 
-  return {
-    lobby: null,
-    myPlayerId: null,
-
-    createLobby: (hostName, maxPlayers) => {
-      const code = generateCode();
-      const hostId = nanoid(8);
-      const lobby: LobbyState = {
-        code,
-        maxPlayers,
-        players: [{ id: hostId, name: hostName, isHost: true, connected: true }],
-        started: false,
-      };
-      set({ lobby, myPlayerId: hostId });
-      persist(lobby);
-      return code;
-    },
-
-    joinLobby: (code, name) => {
-      const existing = readPersisted(code);
-
-      if (!existing) {
-        // Aucun salon trouvé sous ce code sur cet ordinateur : on ne peut pas
-        // deviner une partie qui n'existe pas. On signale l'échec plutôt que
-        // de fabriquer silencieusement un salon vide (ancien bug : ça créait
-        // une pièce isolée et affichait "rejoint" alors que non).
-        return false;
+    ws.addEventListener("message", (event) => {
+      try {
+        handleMessage(JSON.parse(event.data as string) as ServerMessage);
+      } catch {
+        // message illisible, ignoré
       }
-      if (existing.players.length >= existing.maxPlayers || existing.started) return false;
+    });
 
-      const playerId = nanoid(8);
-      const lobby: LobbyState = {
-        ...existing,
-        players: [...existing.players, { id: playerId, name, isHost: false, connected: true }],
-      };
-      set({ lobby, myPlayerId: playerId });
-      persist(lobby);
-      return true;
-    },
+    ws.addEventListener("close", () => {
+      if (socket === ws) socket = null;
+      useLobbyStore.setState({ connected: false });
+    });
 
-    leaveLobby: () => {
-      const current = get().lobby;
-      const myId = get().myPlayerId;
-      if (!current) return;
-      const lobby: LobbyState = { ...current, players: current.players.filter((p) => p.id !== myId) };
-      persist(lobby);
-      set({ lobby: null, myPlayerId: null });
-    },
+    ws.addEventListener("error", () => {
+      connecting = null;
+      reject(new Error("connection"));
+    });
+  });
 
-    startGame: () => {
-      const current = get().lobby;
-      if (!current || current.players.length < 2) return;
-      const lobby: LobbyState = { ...current, started: true };
-      set({ lobby });
-      persist(lobby);
-    },
+  return connecting;
+}
 
-    reset: () => set({ lobby: null, myPlayerId: null }),
-  };
-});
+function send(payload: Record<string, unknown>) {
+  socket?.send(JSON.stringify(payload));
+}
+
+export const useLobbyStore = create<LobbyStore>((set) => ({
+  lobby: null,
+  myPlayerId: null,
+  connected: false,
+
+  createLobby: async (hostName, maxPlayers) => {
+    try {
+      const ws = await connect();
+      const msg = await new Promise<ServerMessage>((resolve, reject) => {
+        pending = { resolve, reject };
+        ws.send(JSON.stringify({ type: "create", hostName, maxPlayers }));
+      });
+      if (msg.type === "created") return { ok: true, code: msg.code };
+      return { ok: false, error: "unknown" };
+    } catch {
+      return { ok: false, error: "connection" };
+    }
+  },
+
+  joinLobby: async (code, name) => {
+    try {
+      const ws = await connect();
+      await new Promise<ServerMessage>((resolve, reject) => {
+        pending = { resolve, reject };
+        ws.send(JSON.stringify({ type: "join", code: code.toUpperCase(), name }));
+      });
+      return { ok: true };
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "unknown";
+      const error: JoinError = ["not-found", "full", "started"].includes(message)
+        ? (message as JoinError)
+        : "connection";
+      return { ok: false, error };
+    }
+  },
+
+  leaveLobby: () => {
+    send({ type: "leave" });
+    set({ lobby: null, myPlayerId: null });
+  },
+
+  startGame: () => {
+    send({ type: "start" });
+  },
+
+  reset: () => set({ lobby: null, myPlayerId: null }),
+}));

@@ -49,9 +49,10 @@ export default function PartiePage() {
       </div>
 
       <p className="text-center text-xs text-navy-900/40 font-sans pb-6 px-4">
-        Démonstration locale (hotseat, un seul navigateur) — le moteur multijoueur
-        réseau nécessite la connexion Supabase (voir{" "}
-        <code className="bg-navy-900/5 px-1 rounded">supabase/README.md</code>).
+        Le salon (création/jointure) est bien partagé en temps réel entre appareils.
+        La partie elle-même, une fois lancée, est encore simulée localement sur
+        chaque appareil (démonstration hotseat) : dés, cartes et soldes ne sont pas
+        encore synchronisés entre joueurs distants pendant le jeu.
       </p>
 
       <CardOverlay />
