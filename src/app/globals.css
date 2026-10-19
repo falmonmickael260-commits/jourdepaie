@@ -1,26 +1,274 @@
 @import "tailwindcss";
 
+/* ============================================================
+   EN JOUR DE PAIE — Design tokens
+   Direction artistique : jeu de société de luxe / finance moderne.
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Vert émeraude — univers principal */
+  --emerald-950: #061f18;
+  --emerald-900: #0a2f24;
+  --emerald-800: #0f4336;
+  --emerald-700: #16594a;
+  --emerald-600: #1f7260;
+  --emerald-500: #2b8f78;
+
+  /* Or champagne — prestige, récompenses */
+  --gold-300: #f2e3bd;
+  --gold-400: #e6cd96;
+  --gold-500: #d4af7a;
+  --gold-600: #b38a52;
+  --gold-700: #8f6c3b;
+
+  /* Ivoire — surfaces claires */
+  --ivory-50: #fbf7ec;
+  --ivory-100: #f4ecd8;
+  --ivory-200: #e9dcbf;
+
+  /* Bleu nuit — fonds profonds */
+  --navy-950: #05070d;
+  --navy-900: #0a0e1a;
+  --navy-800: #121a2b;
+  --navy-700: #1b253a;
+
+  /* Cuivre — éléments financiers */
+  --copper-500: #b5713f;
+  --copper-600: #95582e;
+  --copper-700: #7a4524;
+
+  /* Rouge discret — dettes, pénalités */
+  --garnet-500: #93403b;
+  --garnet-600: #7a2e2e;
+  --garnet-700: #5c2222;
+
+  --background: var(--ivory-50);
+  --foreground: var(--navy-900);
+
+  --radius-card: 1.1rem;
+  --radius-pill: 999px;
+
+  --shadow-soft: 0 2px 8px rgba(6, 10, 18, 0.08), 0 1px 2px rgba(6, 10, 18, 0.06);
+  --shadow-lifted: 0 18px 40px -12px rgba(6, 10, 18, 0.45), 0 4px 12px rgba(6, 10, 18, 0.18);
+  --shadow-gold-glow: 0 0 0 1px rgba(212, 175, 122, 0.35), 0 8px 30px -6px rgba(212, 175, 122, 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --color-emerald-950: var(--emerald-950);
+  --color-emerald-900: var(--emerald-900);
+  --color-emerald-800: var(--emerald-800);
+  --color-emerald-700: var(--emerald-700);
+  --color-emerald-600: var(--emerald-600);
+  --color-emerald-500: var(--emerald-500);
+
+  --color-gold-300: var(--gold-300);
+  --color-gold-400: var(--gold-400);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+  --color-gold-700: var(--gold-700);
+
+  --color-ivory-50: var(--ivory-50);
+  --color-ivory-100: var(--ivory-100);
+  --color-ivory-200: var(--ivory-200);
+
+  --color-navy-950: var(--navy-950);
+  --color-navy-900: var(--navy-900);
+  --color-navy-800: var(--navy-800);
+  --color-navy-700: var(--navy-700);
+
+  --color-copper-500: var(--copper-500);
+  --color-copper-600: var(--copper-600);
+  --color-copper-700: var(--copper-700);
+
+  --color-garnet-500: var(--garnet-500);
+  --color-garnet-600: var(--garnet-600);
+  --color-garnet-700: var(--garnet-700);
+
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-manrope);
+  --font-ledger: var(--font-plex-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Grain overlay — texture papier premium, posée sur les fonds sombres */
+.grain-overlay {
+  position: relative;
+  isolation: isolate;
+}
+.grain-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* Carton / papier premium pour les panneaux clairs */
+.surface-card {
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 255, 255, 0.5), transparent 55%),
+    var(--ivory-50);
+  border: 1px solid rgba(149, 88, 46, 0.14);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Métal doré brossé pour les accents prestige */
+.surface-gold {
+  background: linear-gradient(135deg, var(--gold-300), var(--gold-500) 45%, var(--gold-600) 100%);
+  color: var(--navy-950);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--gold-400);
+  color: var(--navy-950);
+}
+
+@keyframes ejdp-coin-travel {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+.ejdp-coin-travel {
+  offset-rotate: 0deg;
+  animation: ejdp-coin-travel 1.8s ease-in-out forwards;
+}
+
+@keyframes ejdp-die-tumble {
+  0% { transform: rotateX(0deg) rotateY(0deg); }
+  100% { transform: rotateX(540deg) rotateY(720deg); }
+}
+.ejdp-die-tumble {
+  animation: ejdp-die-tumble 0.9s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes ejdp-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.ejdp-ring-spin {
+  animation: ejdp-ring-spin 12s linear infinite;
+}
+.ejdp-ring-spin-slow {
+  animation: ejdp-ring-spin 20s linear infinite reverse;
+}
+
+@keyframes ejdp-pulse-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+.ejdp-pulse-glow {
+  animation: ejdp-pulse-glow 3.2s ease-in-out infinite;
+}
+
+@keyframes ejdp-dash-flow {
+  to { stroke-dashoffset: -360; }
+}
+.ejdp-dash-flow {
+  stroke-dasharray: 8 10;
+  animation: ejdp-dash-flow 5.5s linear infinite;
+}
+
+@keyframes ejdp-token-bob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.04); }
+}
+.ejdp-token-bob {
+  animation: ejdp-token-bob 2.2s ease-in-out infinite;
+}
+
+/* Petit saut du pion à chaque case franchie pendant un déplacement — le
+   transform est répété à chaque étape pour ne jamais perdre le recentrage
+   horizontal (une animation CSS l'emporte sur le style en ligne). */
+@keyframes ejdp-pawn-hop {
+  0% { transform: translateX(-50%) translateY(0) rotate(0deg) scale(1); }
+  32% { transform: translateX(-50%) translateY(-26%) rotate(-5deg) scale(1.05); }
+  68% { transform: translateX(-50%) translateY(-10%) rotate(3deg) scale(1.02); }
+  100% { transform: translateX(-50%) translateY(0) rotate(0deg) scale(1); }
+}
+.ejdp-pawn-hop {
+  animation: ejdp-pawn-hop 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@keyframes ejdp-shadow-hop {
+  0% { transform: translateX(-50%) scale(1); opacity: 0.45; }
+  32% { transform: translateX(-50%) scale(0.58); opacity: 0.2; }
+  100% { transform: translateX(-50%) scale(1); opacity: 0.45; }
+}
+.ejdp-shadow-hop {
+  animation: ejdp-shadow-hop 0.32s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@keyframes ejdp-sparkle-float {
+  0% { transform: translateY(0) scale(0.8); opacity: 0; }
+  15% { opacity: 0.9; }
+  85% { opacity: 0.9; }
+  100% { transform: translateY(-14px) scale(1.1); opacity: 0; }
+}
+.ejdp-sparkle-float {
+  animation: ejdp-sparkle-float 3.6s ease-in-out infinite;
+}
+
+@keyframes ejdp-tile-sheen {
+  0%, 92%, 100% { background-position: -140% 0; }
+  96% { background-position: 220% 0; }
+}
+.ejdp-tile-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 40%, rgba(230, 205, 150, 0.55) 50%, transparent 60%);
+  background-size: 250% 100%;
+  background-position: -140% 0;
+  animation: ejdp-tile-sheen 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
