@@ -149,7 +149,7 @@ export function BoardTile({
       {hovered && (
         <div className="absolute z-30 left-1/2 -translate-x-1/2 bottom-[calc(100%+8px)] w-max max-w-[180px] px-3 py-2 rounded-lg bg-navy-950 text-ivory-50 text-xs shadow-[var(--shadow-lifted)] pointer-events-none">
           <p className="font-semibold">{tile.label}</p>
-          {tile.status !== "confirmed" && (
+          {tile.status === "pending" && (
             <p className="text-gold-300/80 mt-0.5">Règle non vérifiée</p>
           )}
         </div>

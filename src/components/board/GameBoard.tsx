@@ -381,9 +381,10 @@ export function GameBoard() {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="font-display text-lg">{selectedTile.label}</p>
-              {selectedTile.status !== "confirmed" && (
+              {selectedTile.status === "configurable" && (
                 <p className="text-xs text-gold-300/80 mt-1">
-                  Disposition provisoire — en attente de validation contre la notice officielle.
+                  Disposition originale de ce projet — la notice officielle ne publie pas la
+                  répartition exacte des cases.
                 </p>
               )}
             </div>

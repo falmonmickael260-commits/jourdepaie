@@ -106,10 +106,12 @@ export default function ReglesPage() {
         <section className="mb-10">
           <h2 className="font-display text-2xl text-navy-900 mb-4">Catégories de cartes</h2>
           <p className="font-sans text-sm text-navy-800/60 mb-4">
-            Exemples structurels ORIGINAUX (textes et effets propres à ce projet) pour valider
-            le moteur — pas un paquet final. ⚠️ La notice officielle ne connaît que 4 catégories
-            (ACQUISITION, PRÊT, COURRIER, ÉVÈNEMENT) ; les catégories ci-dessous sont encore
-            celles, plus larges, du brief initial du projet — à harmoniser.
+            Exemples structurels ORIGINAUX : titres, textes et montants propres à ce projet
+            (la notice officielle ne publie pas le contenu carte-par-carte de ses 4 paquets —
+            ACQUISITION, COURRIER, PRÊT, ÉVÈNEMENT — seulement leur mécanique générale). Chaque
+            carte ci-dessous applique désormais une mécanique dont l&apos;existence dans le jeu
+            réel est confirmée et citée dans{" "}
+            <code className="bg-navy-900/10 px-1 rounded">sampleCards</code>.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">
             {sampleCards.map((card) => (
@@ -127,20 +129,15 @@ export default function ReglesPage() {
 
         <section>
           <h2 className="font-display text-2xl text-navy-900 mb-4">Ce qui reste à valider</h2>
+          <p className="font-sans text-sm text-navy-800/60 mb-3">
+            La notice officielle complète (texte intégral, pas seulement la page de
+            présentation) a été lue en détail. Les points ci-dessous sont les seuls qui
+            restent réellement ouverts :
+          </p>
           <ul className="font-sans text-sm text-navy-800/70 list-disc list-inside space-y-1.5">
-            <li>
-              Catégories de cartes réelles : ACQUISITION (23), PRÊT (16), COURRIER (50),
-              ÉVÈNEMENT (23) selon la notice — à faire correspondre avec la structure actuelle du
-              projet (7 catégories).
-            </li>
-            <li>
-              Disposition exacte du plateau : quel jour propose quoi (Courrier / Acquisition /
-              Loterie / Anniversaire / Cagnotte / Changement d&apos;heure...). Resterait de toute
-              façon ORIGINALE dans ce projet, mais la logique de répartition n&apos;est pas connue.
-            </li>
-            <li>Mécaniques confirmées mais pas encore implémentées : emprunt/remboursement par paliers de 1 500 €, retrait d&apos;épargne (frais fixes de 150 €), vente d&apos;ACQUISITION aux enchères, Loterie, Cagnotte, Assurance.</li>
-            <li>Confirmer que cette notice générique correspond bien, sans écart, à la boîte « édition 2024 » (réf. F6424) et pas seulement à une réimpression antérieure.</li>
-            <li>Méthode de classement final en cas d&apos;égalité ou si tous les joueurs sont endettés (le principe « le moins endetté gagne » est, lui, confirmé).</li>
+            <li>Mécaniques confirmées mais pas encore implémentées dans le moteur de jeu : emprunt/remboursement par paliers de 1 500 €, retrait d&apos;épargne (frais fixes de 150 €), case Loterie, Cagnotte (jackpot sur un 6), Changement d&apos;heure, cartes Assurance, vente aux enchères d&apos;ACQUISITION/ASSURANCE en cas de dette, et calcul du capital final (cash + épargne − prêts restants, le moins endetté l&apos;emportant en cas d&apos;endettement généralisé).</li>
+            <li>Confirmer que cette notice générique correspond bien, sans écart, à la boîte « édition 2024 » (réf. F6424) et pas seulement à une réimpression antérieure (même référence fabricant 000324470, datée 2014).</li>
+            <li>Le contenu carte-par-carte des 4 paquets réels (112 cartes au total) n&apos;est pas public — les cartes de ce projet resteront donc toujours des exemples originaux, jamais une recopie.</li>
           </ul>
         </section>
       </div>

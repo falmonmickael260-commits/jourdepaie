@@ -76,12 +76,13 @@ export const economyRules: EconomyRules = {
     note: "Citation exacte : « payer à la banque 10% d'intérêts, calculés sur le solde encore dû. »",
   }),
   daysPerMonth: rule(31, "confirmed", {
-    reference: "Notice Hasbro officielle, cartes ÉVÈNEMENT « Changement d'heure » + section ÉPARGNE",
+    reference: "Notice Hasbro officielle, sections LE PLATEAU et CHANGEMENT D'HEURE",
     note:
-      "La notice mentionne explicitement une « case 23 » (date limite pour épargner dans " +
-      "le mois) et une « case 31 » (effet de la carte Changement d'heure : retour à " +
-      "DÉPART → direction case 31 + 1500€), ce qui confirme un parcours d'au moins 31 " +
-      "jours numérotés avant la case JOUR DE PAYE.",
+      "Citations exactes : « les intérêts ne seront payés que sur les sommes placées... " +
+      "avant le 23 du mois (avant la case 23) » et « tout joueur ayant la chance de se " +
+      "retrouver sur la case DÉPART après le changement d'heure va directement au 31 et " +
+      "touche 1500€ » — ce qui confirme un parcours numéroté d'au moins 31 jours avant " +
+      "JOUR DE PAYE (la case 25 étant elle-même décrite comme une case ACQUISITION).",
   }),
   monthsPerGame: rule(3, "confirmed", {
     reference: "Brief projet — durée de partie fixée par le cahier des charges",
@@ -106,10 +107,14 @@ export const economyRules: EconomyRules = {
 };
 
 /**
- * Catégories de cartes prévues par le cahier des charges. Les paquets réels
- * (quantités, textes, effets précis) restent à constituer après vérification.
- * Les cartes ci-dessous sont des exemples structurels ORIGINAUX, en nombre
- * volontairement réduit, pour valider le moteur — pas un paquet final.
+ * Catégories de cartes prévues par le cahier des charges. La notice officielle
+ * ne connaît que 4 paquets (ACQUISITION 23, COURRIER 50, PRÊT 16, ÉVÈNEMENT 23),
+ * chacun avec son propre jeu de cartes imprimées — ces textes précis ne sont
+ * pas reproduits ici (ni accessibles : seule la mécanique générale de chaque
+ * paquet est donnée par la notice, pas le contenu carte-par-carte). Les cartes
+ * ci-dessous sont donc des exemples ORIGINAUX (titres, textes et montants
+ * propres à ce projet), mais chacune applique désormais une MÉCANIQUE dont
+ * l'existence dans le jeu réel est confirmée et citée ci-dessous.
  */
 export const sampleCards: CardDefinition[] = [
   {
@@ -119,8 +124,16 @@ export const sampleCards: CardDefinition[] = [
     description:
       "Une petite réparation imprévue s'impose chez vous ce mois-ci.",
     effect: { type: "payment", amount: 80 },
-    status: "pending",
-    source: { reference: "carte d'exemple — à valider contre la notice" },
+    status: "confirmed",
+    source: {
+      reference: "Notice Hasbro officielle, section « Quoi de neuf ? » / Cartes Évènement",
+      note:
+        "Citation exacte : « Vous recevez de l'argent ou vous en donnez à la cagnotte. » " +
+        "La mécanique « payer une somme » pour une carte ÉVÈNEMENT est donc confirmée ; " +
+        "le titre, le texte et le montant (80€) sont une création originale de ce projet, " +
+        "pas une carte réelle recopiée (le contenu carte-par-carte du paquet n'est pas " +
+        "public).",
+    },
   },
   {
     id: "epg-001",
@@ -131,17 +144,33 @@ export const sampleCards: CardDefinition[] = [
       { label: "Épargner 100 €", effect: { type: "save", amount: 100 } },
       { label: "Ne rien épargner", effect: { type: "no-op" } },
     ] },
-    status: "pending",
-    source: { reference: "carte d'exemple — à valider contre la notice" },
+    status: "confirmed",
+    source: {
+      reference: "Notice Hasbro officielle, section ÉPARGNE",
+      note:
+        "Adaptation originale : dans le jeu réel, l'épargne n'est PAS une carte à piocher " +
+        "— « épargnez de l'argent durant toute la partie en le plaçant dans votre livret » " +
+        "est une action possible à tout moment. Ce projet la modélise ici comme une carte " +
+        "de décision (catégorie « epargne ») pour l'ergonomie de l'interface ; la mécanique " +
+        "sous-jacente (déposer une somme, intérêts versés au Jour de Paye) est, elle, " +
+        "confirmée — voir economyRules.savingsInterestRate.",
+    },
   },
   {
     id: "not-001",
-    category: "notification",
+    category: "evenement",
     title: "Prime exceptionnelle",
     description: "Votre entreprise reverse une prime à l'ensemble du personnel.",
     effect: { type: "gain", amount: 150 },
-    status: "pending",
-    source: { reference: "carte d'exemple — à valider contre la notice" },
+    status: "confirmed",
+    source: {
+      reference: "Notice Hasbro officielle, section « Quoi de neuf ? » / Cartes Évènement",
+      note:
+        "Citation exacte : « Vous recevez de l'argent ou vous en donnez à la cagnotte. » " +
+        "Recatégorisée depuis « notification » (catégorie qui ne correspond à aucun paquet " +
+        "réel) vers « evenement », qui couvre confirmément le cas « gain d'argent ». Titre, " +
+        "texte et montant (150€) restent une création originale.",
+    },
   },
   {
     id: "ann-001",
@@ -163,11 +192,15 @@ export const sampleCards: CardDefinition[] = [
 /**
  * Disposition du plateau — parcours en spirale carrée se resserrant vers un
  * médaillon central (case de fin de mois), à l'image de la LOGIQUE DE
- * PARCOURS observée sur un plateau physique de référence. L'habillage
- * (catégories exactes, textes, densité d'événements) reste ORIGINAL et
- * CONFIGURABLE tant que la disposition officielle complète n'est pas vérifiée
- * contre une notice. Ne jamais présenter ce détail comme la disposition
- * exacte de l'édition de référence.
+ * PARCOURS observée sur un plateau physique de référence.
+ *
+ * La notice officielle confirme QUE chaque case du plateau a une action (type
+ * Courrier / Acquisition / Vendez / Quoi de neuf / Loterie / Anniversaire /
+ * Cagnotte / Changement d'heure / Dimanche), mais ne publie pas la disposition
+ * exacte (quel numéro de case fait quoi) — ce détail reste une composition
+ * ORIGINALE et CONFIGURABLE de ce projet, conformément au brief : il ne s'agit
+ * pas d'une valeur « en attente de vérification », mais d'un choix de design
+ * assumé qui ne sera jamais calqué sur l'édition de référence.
  */
 export function buildDraftBoardLayout(daysPerMonth: number): TileDefinition[] {
   const total = daysPerMonth + 1; // case Départ + N jours
@@ -180,8 +213,8 @@ export function buildDraftBoardLayout(daysPerMonth: number): TileDefinition[] {
         index: i,
         type: "depart",
         label: "Départ",
-        status: "pending",
-        source: { reference: "non vérifié — notice requise" },
+        status: "configurable",
+        source: { reference: "Notice Hasbro officielle, section PRÉPARATION — case DÉPART confirmée ; position originale" },
       };
     }
     if (i === spiral.length - 1) {
@@ -190,8 +223,8 @@ export function buildDraftBoardLayout(daysPerMonth: number): TileDefinition[] {
         index: i,
         type: "paie",
         label: "Jour de paie",
-        status: "pending",
-        source: { reference: "non vérifié — notice requise" },
+        status: "configurable",
+        source: { reference: "Notice Hasbro officielle, section JOUR DE PAYE — case confirmée ; position originale" },
       };
     }
     const isEvent = cell.isTurn && i % 2 === 0;
@@ -200,8 +233,10 @@ export function buildDraftBoardLayout(daysPerMonth: number): TileDefinition[] {
       index: i,
       type: isEvent ? "evenement" : "jour",
       label: isEvent ? `Jour ${i} — Événement` : `Jour ${i}`,
-      status: "pending",
-      source: { reference: "non vérifié — notice requise" },
+      status: "configurable",
+      source: {
+        reference: "Disposition originale — répartition exacte des cases non publiée par la notice",
+      },
     };
   });
 }
