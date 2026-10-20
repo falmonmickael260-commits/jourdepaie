@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect } from "react";
 import { useGameStore } from "@/game/store/useGameStore";
+import { useLobbyStore } from "@/game/store/useLobbyStore";
 import { Button } from "@/components/ui/Button";
 import { useSfx } from "@/lib/audio/useSfx";
 import {
@@ -28,8 +29,15 @@ const CATEGORY_META: Record<CardCategory, { label: string; icon: LucideIcon; acc
 };
 
 export function CardOverlay() {
-  const pendingCard = useGameStore((s) => s.pendingCard);
+  const pendingCard = useGameStore((s) => s.state.activeCard);
+  const activePlayer = useGameStore((s) => s.state.players[s.state.activePlayerIndex]);
   const chooseCardOption = useGameStore((s) => s.chooseCardOption);
+  const lobby = useLobbyStore((s) => s.lobby);
+  const myPlayerId = useLobbyStore((s) => s.myPlayerId);
+  // En mode local (pas de salon réseau), il n'y a qu'un seul appareil : tout
+  // le monde peut agir. En réseau, seul le joueur dont c'est le tour peut
+  // choisir — les autres voient la carte mais pas de boutons actifs.
+  const isMyTurn = !lobby || myPlayerId === activePlayer?.id;
   const playSfx = useSfx();
 
   useEffect(() => {
@@ -116,7 +124,11 @@ export function CardOverlay() {
                   </p>
                 )}
 
-                {pendingCard.effect.type === "choice" ? (
+                {!isMyTurn ? (
+                  <p className="text-sm text-navy-800/50 font-sans text-center py-2">
+                    En attente de la décision de {activePlayer?.name}…
+                  </p>
+                ) : pendingCard.effect.type === "choice" ? (
                   <div className="flex flex-col gap-2">
                     {pendingCard.effect.options.map((opt, i) => (
                       <Button key={i} variant="outline" className="w-full justify-center" onClick={() => chooseCardOption(i)}>

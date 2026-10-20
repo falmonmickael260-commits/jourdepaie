@@ -65,10 +65,9 @@ export default function CreerSalonPage() {
         </label>
 
         <p className="text-xs text-navy-800/45 font-sans leading-relaxed">
-          Durée de partie : 3 mois (fixée par les règles du projet). Le salon est
-          partagé en temps réel avec les autres appareils via le serveur — la
-          partie elle-même (dés, cartes, tours) reste en revanche simulée
-          localement sur chaque appareil une fois lancée.
+          Durée de partie : 3 mois (fixée par les règles du projet). Le salon et
+          la partie (dés, cartes, tours) sont tous les deux partagés en temps
+          réel via le serveur — chacun ne peut agir que pour son propre pion.
         </p>
 
         {error && <p className="text-sm text-garnet-600">{error}</p>}

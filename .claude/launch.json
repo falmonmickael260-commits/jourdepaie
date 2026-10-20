@@ -4,7 +4,7 @@
     {
       "name": "en-jour-de-paie-dev",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "PORT=3417 node server.mjs"],
+      "runtimeArgs": ["-c", "PORT=3417 npm run dev"],
       "port": 3417
     }
   ]

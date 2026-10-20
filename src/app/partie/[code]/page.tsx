@@ -16,21 +16,27 @@ export default function PartiePage({ params }: { params: Promise<{ code: string 
   const month = useGameStore((s) => s.state.month);
   const phase = useGameStore((s) => s.state.phase);
   const restart = useGameStore((s) => s.restart);
+  const requestSync = useGameStore((s) => s.requestSync);
   const lobby = useLobbyStore((s) => s.lobby);
   const playSfx = useSfx();
   const prevMonth = useRef(month);
   const prevPhase = useRef(phase);
   const initializedForCode = useRef<string | null>(null);
 
-  // La partie doit démarrer avec exactement les joueurs du salon (pas une
-  // liste fixe de 3 "Joueur 1/2/3" — sinon un salon à 2 joueurs se
-  // retrouvait quand même avec un 3e pion fantôme qui joue tout seul).
+  // Si un vrai salon réseau existe pour ce code, la partie a déjà été
+  // diffusée par le serveur au moment où l'hôte l'a lancée (voir
+  // useGameStore / server.ts) — il ne faut surtout pas l'écraser ici par une
+  // simulation locale. Ce n'est qu'en l'absence de salon (ex. /partie/demo,
+  // test solo sans serveur) qu'on initialise une démo hotseat locale.
   useEffect(() => {
-    if (lobby && lobby.code === code && initializedForCode.current !== code) {
-      initializedForCode.current = code;
-      restart(lobby.players.map((p) => p.name));
+    if (initializedForCode.current === code) return;
+    initializedForCode.current = code;
+    if (!lobby || lobby.code !== code) {
+      restart(["Joueur 1", "Joueur 2", "Joueur 3"]);
+    } else {
+      requestSync();
     }
-  }, [code, lobby, restart]);
+  }, [code, lobby, restart, requestSync]);
 
   useEffect(() => {
     if (month !== prevMonth.current) {
@@ -64,10 +70,9 @@ export default function PartiePage({ params }: { params: Promise<{ code: string 
       </div>
 
       <p className="text-center text-xs text-navy-900/40 font-sans pb-6 px-4">
-        Le salon (création/jointure) est bien partagé en temps réel entre appareils.
-        La partie elle-même, une fois lancée, est encore simulée localement sur
-        chaque appareil (démonstration hotseat) : dés, cartes et soldes ne sont pas
-        encore synchronisés entre joueurs distants pendant le jeu.
+        {lobby && lobby.code === code
+          ? "Partie en réseau : le serveur fait autorité sur les dés, les cartes et les tours — seul le joueur actif peut agir pour lui-même."
+          : "Démonstration locale (hotseat, un seul navigateur, sans serveur) — les actions ne sont pas partagées."}
       </p>
 
       <CardOverlay />

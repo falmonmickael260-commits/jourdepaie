@@ -121,7 +121,7 @@ export function GameBoard() {
   const players = useGameStore((s) => s.state.players);
   const activePlayerIndex = useGameStore((s) => s.state.activePlayerIndex);
   const onMoveAnimationComplete = useGameStore((s) => s.onMoveAnimationComplete);
-  const isMoving = useGameStore((s) => s.isMoving);
+  const phase = useGameStore((s) => s.state.phase);
   const month = useGameStore((s) => s.state.month);
   const day = useGameStore((s) => s.state.day);
 
@@ -354,7 +354,7 @@ export function GameBoard() {
               onStep={isActivePlayer ? triggerDust : undefined}
               onArrived={() => {
                 triggerBurst(player.position);
-                if (isActivePlayer && isMoving) onMoveAnimationComplete();
+                if (isActivePlayer && phase === "moving") onMoveAnimationComplete();
               }}
             />
           );

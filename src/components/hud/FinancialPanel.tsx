@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Wallet, PiggyBank, TrendingDown, TrendingUp } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
 import { useGameStore } from "@/game/store/useGameStore";
+import { useLobbyStore } from "@/game/store/useLobbyStore";
 
 function formatEuros(amount: number) {
   return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(amount);
@@ -43,7 +44,15 @@ function Line({
 }
 
 export function FinancialPanel() {
-  const activePlayer = useGameStore((s) => s.state.players[s.state.activePlayerIndex]);
+  const players = useGameStore((s) => s.state.players);
+  const activePlayerIndex = useGameStore((s) => s.state.activePlayerIndex);
+  const lobby = useLobbyStore((s) => s.lobby);
+  const myPlayerId = useLobbyStore((s) => s.myPlayerId);
+  // En réseau, ce panneau doit montrer MES finances, pas celles du joueur
+  // dont c'est le tour (sinon chaque appareil regarderait le compte de
+  // quelqu'un d'autre à tour de rôle). En local (hotseat), il n'y a qu'un
+  // écran : on montre le joueur actif comme avant.
+  const activePlayer = lobby && myPlayerId ? players.find((p) => p.id === myPlayerId) : players[activePlayerIndex];
   const [delta, setDelta] = useState<{ key: number; amount: number } | null>(null);
   const [savingsPulse, setSavingsPulse] = useState(false);
   const prevCash = useRef(activePlayer?.account.cash);
@@ -51,6 +60,7 @@ export function FinancialPanel() {
   const deltaKey = useRef(0);
 
   useEffect(() => {
+    if (!activePlayer) return;
     if (prevCash.current === undefined) {
       prevCash.current = activePlayer.account.cash;
       return;
@@ -63,9 +73,11 @@ export function FinancialPanel() {
     setDelta({ key, amount: diff });
     const t = setTimeout(() => setDelta((d) => (d?.key === key ? null : d)), 1100);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePlayer?.account.cash]);
 
   useEffect(() => {
+    if (!activePlayer) return;
     if (prevSavings.current === undefined) {
       prevSavings.current = activePlayer.account.savings;
       return;
@@ -76,6 +88,7 @@ export function FinancialPanel() {
       const t = setTimeout(() => setSavingsPulse(false), 600);
       return () => clearTimeout(t);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePlayer?.account.savings]);
 
   if (!activePlayer) return null;

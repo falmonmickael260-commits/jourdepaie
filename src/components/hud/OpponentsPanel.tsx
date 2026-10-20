@@ -3,10 +3,12 @@
 import { Panel } from "@/components/ui/Panel";
 import { PlayerToken } from "@/components/board/PlayerToken";
 import { useGameStore } from "@/game/store/useGameStore";
+import { useLobbyStore } from "@/game/store/useLobbyStore";
 
 export function OpponentsPanel() {
   const players = useGameStore((s) => s.state.players);
   const activePlayerIndex = useGameStore((s) => s.state.activePlayerIndex);
+  const myPlayerId = useLobbyStore((s) => s.myPlayerId);
 
   return (
     <Panel>
@@ -17,7 +19,10 @@ export function OpponentsPanel() {
         {players.map((p, i) => (
           <li key={p.id} className="flex items-center gap-2.5">
             <PlayerToken tokenId={p.tokenId} size={24} ring={i === activePlayerIndex} />
-            <span className="font-sans text-sm text-navy-900 flex-1">{p.name}</span>
+            <span className="font-sans text-sm text-navy-900 flex-1">
+              {p.name}
+              {p.id === myPlayerId && <span className="ml-1.5 text-xs text-emerald-700 font-semibold">(vous)</span>}
+            </span>
             <span
               className={`w-1.5 h-1.5 rounded-full ${p.connected ? "bg-emerald-500" : "bg-garnet-500"}`}
               title={p.connected ? "Connecté" : "Déconnecté"}

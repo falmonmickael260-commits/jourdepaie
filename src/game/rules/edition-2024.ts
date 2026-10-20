@@ -23,7 +23,7 @@
  */
 
 import { rule, type RuleValue, type CardDefinition, type TileDefinition } from "./types";
-import { computeSpiralLayout } from "@/data/board-geometry";
+import { computeSpiralLayout } from "../../data/board-geometry";
 
 export const RULESET_VERSION = "edition-2024-configurable-draft";
 
