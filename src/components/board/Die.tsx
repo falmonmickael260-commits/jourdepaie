@@ -49,19 +49,22 @@ const FACE_END_ROTATION: Record<number, { x: number; y: number }> = {
 export function Die({ value, rolling }: { value: number; rolling: boolean }) {
   // La face à montrer est calculée DIRECTEMENT depuis les props à chaque
   // rendu — jamais via un état local dérivé à resynchroniser dans un effet.
-  // C'est cet ancien état dérivé qui pouvait rester bloqué sur la face "1"
-  // au tout premier rendu d'un nouveau tour, alors même que la valeur
-  // réellement stockée (et le déplacement du pion) était la bonne : seul
-  // l'affichage du dé se trompait.
   const end = FACE_END_ROTATION[value] ?? FACE_END_ROTATION[1];
   const target = { rotateX: end.x, rotateY: end.y };
 
+  // `key` change à chaque arrêt sur une nouvelle face : force un nouveau
+  // montage du composant plutôt qu'une transition d'une valeur `animate` à
+  // une autre. Sans ça, `animate` passait de `undefined` (pendant le lancer,
+  // piloté par la classe CSS) à `target` à l'arrêt, et framer-motion ne
+  // reprenait pas toujours la main sur la rotation — le dé restait figé sur
+  // sa face de repos ("1") quel que soit le chiffre réellement tiré.
   return (
     <div style={{ perspective: 320 }} className="w-[52px] h-[52px]">
       <motion.div
+        key={rolling ? "rolling" : `face-${value}`}
         className={cn("relative w-full h-full", rolling && "ejdp-die-tumble")}
         style={{ transformStyle: "preserve-3d" }}
-        initial={false}
+        initial={rolling ? false : { rotateX: target.rotateX - 25, rotateY: target.rotateY + 20 }}
         animate={rolling ? undefined : target}
         transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
       >
