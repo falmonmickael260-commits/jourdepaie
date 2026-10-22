@@ -21,6 +21,18 @@ const PHASE_LABEL: Record<string, string> = {
   "game-end": "Partie terminée",
 };
 
+/** Une fois lancés, les dés restent affichés jusqu'au tour suivant (au lieu de
+ * disparaître dès la fin de l'animation de déplacement) — sinon le résultat
+ * du lancer n'est jamais réellement visible par le joueur. */
+const PHASES_WITH_DICE_VISIBLE = new Set([
+  "awaiting-roll",
+  "moving",
+  "resolving-tile",
+  "awaiting-card-decision",
+  "awaiting-payment",
+  "turn-end",
+]);
+
 export function ActionPanel() {
   const phase = useGameStore((s) => s.state.phase);
   const endTurn = useGameStore((s) => s.endTurn);
@@ -45,7 +57,7 @@ export function ActionPanel() {
       >
         <p className="text-xs tracking-[0.2em] uppercase text-gold-300/80 font-sans">{phaseLabel}</p>
 
-        {phase === "awaiting-roll" && <DiceRoller />}
+        {PHASES_WITH_DICE_VISIBLE.has(phase) && <DiceRoller />}
 
         {(phase === "moving" || phase === "resolving-tile") && (
           <Loader2 className="animate-spin text-gold-400" size={28} />

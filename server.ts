@@ -21,7 +21,7 @@ import { WebSocketServer, type WebSocket } from "ws";
 
 import { reduceGame } from "./src/game/engine/state-machine";
 import { resolveCardEffect } from "./src/game/engine/resolve-card";
-import { economyRules, buildDraftBoardLayout, sampleCards } from "./src/game/rules/edition-2024";
+import { economyRules, buildDraftBoardLayout, pickCardForTile } from "./src/game/rules/edition-2024";
 import type { GameState, PlayerTokenId } from "./src/game/engine/types";
 
 const port = parseInt(process.env.PORT || "3000", 10);
@@ -257,8 +257,8 @@ app.prepare().then(() => {
         room.game = reduceGame(room.game, { type: "ACK_MOVE_COMPLETE" });
         room.game = reduceGame(room.game, { type: "RESOLVE_TILE" });
         if (room.game.phase === "awaiting-card-decision") {
-          const card = sampleCards[Math.floor(Math.random() * sampleCards.length)];
-          room.game = { ...room.game, activeCard: card };
+          const tile = room.game.board[room.game.players[room.game.activePlayerIndex].position];
+          room.game = { ...room.game, activeCard: pickCardForTile(tile.type) };
         }
         broadcastGame(room);
         return;

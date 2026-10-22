@@ -32,6 +32,7 @@ export type CardCategory =
   | "investir"
   | "encherir"
   | "evenement"
+  | "courrier"
   | "notification"
   | "pret"
   | "epargne"
@@ -64,18 +65,27 @@ export interface CardChoiceOption {
   effect: CardEffect;
 }
 
+/**
+ * Types de case tels que décrits par la notice officielle (section LE PLATEAU
+ * et cartes associées) : Courrier, Acquisition, Vendez, Quoi de neuf (tirage
+ * ÉVÈNEMENT), Loterie, Joyeux anniversaire, Frais d'inscription pour une
+ * course de vélo (cotisation collective à la cagnotte), Cagnotte de la Bonne
+ * Paye (jackpot sur un 6), Changement d'heure, Dimanche (repos), Départ et
+ * Jour de Paye.
+ */
 export type TileType =
-  | "jour"
-  | "banque"
-  | "commerce"
-  | "loisir"
-  | "evenement"
-  | "notification"
-  | "epargne"
-  | "pret"
   | "depart"
-  | "paie"
-  | "anniversaire";
+  | "dimanche"
+  | "courrier"
+  | "acquisition"
+  | "vendez"
+  | "evenement"
+  | "loterie"
+  | "anniversaire"
+  | "cotisation"
+  | "cagnotte"
+  | "changement-heure"
+  | "paie";
 
 export interface TileDefinition {
   id: string;

@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import type { GameAction, GameState } from "./types";
 import { applyTransaction, creditCash } from "./transactions";
-import { economyRules } from "../rules/edition-2024";
+import { economyRules, CARD_TILE_TYPES } from "../rules/edition-2024";
 
 /**
  * Transitions de phase autorisées. Toute action reçue hors de la phase
@@ -79,7 +79,7 @@ export function reduceGame(state: GameState, action: GameAction): GameState {
         );
       }
 
-      if (tile.type === "evenement" || tile.type === "notification") {
+      if (CARD_TILE_TYPES.includes(tile.type)) {
         return { ...state, phase: "awaiting-card-decision" };
       }
 

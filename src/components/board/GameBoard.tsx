@@ -276,7 +276,7 @@ export function GameBoard() {
         </svg>
 
         {arrows.map((a) => (
-          <PathArrow key={a.key} xPct={a.xPct} yPct={a.yPct} angle={a.angle} />
+          <PathArrow key={`arrow-${a.key}`} xPct={a.xPct} yPct={a.yPct} angle={a.angle} />
         ))}
 
         {/* Médaillon central — aligné exactement sur le bloc libre de la spirale */}
@@ -362,10 +362,10 @@ export function GameBoard() {
 
         <AnimatePresence>
           {dust.map((d) => (
-            <StepDust key={d.key} xPct={d.xPct} yPct={d.yPct} />
+            <StepDust key={`dust-${d.key}`} xPct={d.xPct} yPct={d.yPct} />
           ))}
           {bursts.map((b) => (
-            <TileBurst key={b.key} xPct={b.xPct} yPct={b.yPct} />
+            <TileBurst key={`burst-${b.key}`} xPct={b.xPct} yPct={b.yPct} />
           ))}
         </AnimatePresence>
 

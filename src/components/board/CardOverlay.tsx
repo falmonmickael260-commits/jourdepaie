@@ -14,6 +14,7 @@ import {
   Landmark,
   PiggyBank,
   Gift,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 import type { CardCategory } from "@/game/rules/types";
@@ -22,6 +23,7 @@ const CATEGORY_META: Record<CardCategory, { label: string; icon: LucideIcon; acc
   investir: { label: "Investir", icon: TrendingUp, accent: "text-emerald-700", chip: "bg-emerald-700/12", border: "border-emerald-700/35" },
   encherir: { label: "Enchérir", icon: Gavel, accent: "text-copper-700", chip: "bg-copper-600/12", border: "border-copper-600/35" },
   evenement: { label: "Événement", icon: Sparkles, accent: "text-gold-700", chip: "bg-gold-500/18", border: "border-gold-500/45" },
+  courrier: { label: "Courrier", icon: Mail, accent: "text-navy-700", chip: "bg-navy-700/12", border: "border-navy-700/35" },
   notification: { label: "Notification", icon: Bell, accent: "text-copper-700", chip: "bg-copper-600/12", border: "border-copper-600/35" },
   pret: { label: "Prêt", icon: Landmark, accent: "text-garnet-600", chip: "bg-garnet-600/12", border: "border-garnet-600/35" },
   epargne: { label: "Épargne", icon: PiggyBank, accent: "text-emerald-700", chip: "bg-emerald-700/12", border: "border-emerald-700/35" },

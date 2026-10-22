@@ -19,7 +19,7 @@ import { nanoid } from "nanoid";
 import type { GameState, PlayerTokenId } from "../engine/types";
 import { reduceGame } from "../engine/state-machine";
 import { resolveCardEffect } from "../engine/resolve-card";
-import { economyRules, buildDraftBoardLayout, sampleCards } from "../rules/edition-2024";
+import { economyRules, buildDraftBoardLayout, pickCardForTile } from "../rules/edition-2024";
 import { useLobbyStore } from "./useLobbyStore";
 import { onMessage, sendMessage, type ServerMessage } from "@/lib/realtime/socket";
 
@@ -131,7 +131,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((s) => {
       const next = reduceGame(s.state, { type: "RESOLVE_TILE" });
       if (next.phase === "awaiting-card-decision") {
-        const card = sampleCards[Math.floor(Math.random() * sampleCards.length)];
+        const tile = next.board[next.players[next.activePlayerIndex].position];
+        const card = pickCardForTile(tile.type);
         return { state: { ...next, activeCard: card } };
       }
       return { state: next };

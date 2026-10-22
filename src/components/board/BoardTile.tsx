@@ -2,22 +2,23 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Banknote, Calendar, Flag, Gift, Landmark, PiggyBank, Sparkles } from "lucide-react";
+import { Banknote, Bike, Calendar, Clock, Coins, Dices, Flag, Gift, Mail, Moon, ShoppingBag, Sparkles, Tag } from "lucide-react";
 import type { TileDefinition } from "@/game/rules/types";
 import { cn } from "@/lib/utils";
 
 const TILE_ICON: Record<TileDefinition["type"], typeof Calendar> = {
-  jour: Calendar,
   depart: Flag,
   paie: Banknote,
+  dimanche: Moon,
+  courrier: Mail,
+  acquisition: ShoppingBag,
+  vendez: Tag,
   evenement: Sparkles,
-  notification: Gift,
-  banque: Landmark,
-  commerce: Landmark,
-  loisir: Sparkles,
-  epargne: PiggyBank,
-  pret: Landmark,
+  loterie: Dices,
   anniversaire: Gift,
+  cotisation: Bike,
+  cagnotte: Coins,
+  "changement-heure": Clock,
 };
 
 /** Quatre teintes de cases "jour" qui alternent le long du parcours, pour un plateau
@@ -48,6 +49,12 @@ const MILESTONE_STYLE: Partial<Record<TileDefinition["type"], { bg: string; bord
     text: "#5c3d1a",
     chip: "bg-white/40",
   },
+  dimanche: {
+    bg: "linear-gradient(155deg, #eef0ef 0%, #d3d8d6 65%, #aeb6b3 100%)",
+    border: "rgba(60,70,66,0.3)",
+    text: "#3c4642",
+    chip: "bg-white/40",
+  },
 };
 
 export function BoardTile({
@@ -71,7 +78,6 @@ export function BoardTile({
 }) {
   const [hovered, setHovered] = useState(false);
   const Icon = TILE_ICON[tile.type] ?? Calendar;
-  const special = tile.type !== "jour";
   const isMilestone = tile.type === "depart" || tile.type === "paie";
   const big = isCorner || isMilestone;
 
@@ -111,30 +117,26 @@ export function BoardTile({
             : "0 2px 6px rgba(74,52,20,0.22), inset 0 1px 0 rgba(255,255,255,0.65), inset 0 -2px 3px rgba(74,52,20,0.12)",
         }}
       >
-        {tile.type === "jour" ? (
-          <span className={cn("font-display font-semibold leading-none", big ? "text-base sm:text-xl" : "text-sm sm:text-base")}>
-            {tile.index}
-          </span>
-        ) : (
-          <span
-            className={cn(
-              "flex items-center justify-center rounded-full",
-              big ? "w-5 h-5 sm:w-7 sm:h-7" : "w-4 h-4 sm:w-5 sm:h-5",
-              !isResolved && style.chip
-            )}
-          >
-            <Icon size={big ? 16 : 12} className="sm:hidden" strokeWidth={1.8} />
-            <Icon size={big ? 20 : 14} className="hidden sm:block" strokeWidth={1.8} />
-          </span>
-        )}
-        {big && (
+        <span
+          className={cn(
+            "flex items-center justify-center rounded-full",
+            big ? "w-5 h-5 sm:w-7 sm:h-7" : "w-4 h-4 sm:w-5 sm:h-5",
+            !isResolved && style.chip
+          )}
+        >
+          <Icon size={big ? 16 : 12} className="sm:hidden" strokeWidth={1.8} />
+          <Icon size={big ? 20 : 14} className="hidden sm:block" strokeWidth={1.8} />
+        </span>
+        {isMilestone && (
           <span className="mt-0.5 sm:mt-1 text-[0.4rem] sm:text-[0.5rem] font-semibold tracking-[0.1em] sm:tracking-[0.12em] uppercase leading-none text-center px-0.5">
-            {tile.type === "depart" ? "Départ" : tile.type === "paie" ? "Paie" : "Spécial"}
+            {tile.type === "depart" ? "Départ" : "Paie"}
           </span>
         )}
 
-        {special && !isResolved && tile.type !== "depart" && tile.type !== "paie" && (
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-navy-950/30" />
+        {!isMilestone && !isResolved && (
+          <span className="absolute top-0.5 right-1 text-[0.45rem] sm:text-[0.55rem] font-semibold tabular-nums leading-none opacity-70">
+            {tile.index}
+          </span>
         )}
 
         {isActive && (

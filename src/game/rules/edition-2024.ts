@@ -22,7 +22,7 @@
  * ces valeurs comme vérifiées dans l'interface.
  */
 
-import { rule, type RuleValue, type CardDefinition, type TileDefinition } from "./types";
+import { rule, type RuleValue, type CardDefinition, type TileDefinition, type TileType } from "./types";
 import { computeSpiralLayout } from "../../data/board-geometry";
 
 export const RULESET_VERSION = "edition-2024-configurable-draft";
@@ -187,57 +187,162 @@ export const sampleCards: CardDefinition[] = [
         "de la notice.",
     },
   },
+  {
+    id: "cou-001",
+    category: "courrier",
+    title: "Facture d'électricité",
+    description: "Une facture vous attend dans le courrier de ce mois-ci.",
+    effect: { type: "payment", amount: 60 },
+    status: "confirmed",
+    source: {
+      reference: "Notice Hasbro officielle, section Cartes Courrier",
+      note:
+        "Citation exacte : « Payez toutes les factures que vous avez reçues, à moins que " +
+        "vous ayez une assurance... ». La mécanique « facture à régler » pour une carte " +
+        "COURRIER est donc confirmée (catégorie absente de la structure initiale du " +
+        "projet, ajoutée ici) ; le montant (60€) est original, aucune carte réelle n'étant " +
+        "reproduite.",
+    },
+  },
+  {
+    id: "inv-001",
+    category: "investir",
+    title: "Vélo vintage à restaurer",
+    description: "Une bonne affaire se présente, si vous avez de quoi investir.",
+    effect: { type: "choice", options: [
+      { label: "Acheter 400 €", effect: { type: "payment", amount: 400 } },
+      { label: "Laisser passer", effect: { type: "no-op" } },
+    ] },
+    status: "confirmed",
+    source: {
+      reference: "Notice Hasbro officielle, section Cartes Acquisition",
+      note:
+        "Citation exacte : « Si l'affaire proposée sur la carte vous intéresse, payez à la " +
+        "banque le montant indiqué et gardez la carte. Si vous n'êtes pas intéressé, " +
+        "reposez la carte. » Mécanique « achat optionnel » confirmée ; la revente ultérieure " +
+        "à « valeur réelle » (case Vendez) n'est pas encore câblée dans le moteur — pour " +
+        "l'instant, acheter ne fait que débiter, sans suivi de l'objet en main ni revente " +
+        "possible.",
+    },
+  },
 ];
+
+/** Types de case qui déclenchent une décision de carte (voir RESOLVE_TILE). */
+export const CARD_TILE_TYPES: TileType[] = ["courrier", "acquisition", "evenement", "anniversaire"];
+
+/**
+ * Choisit la carte à proposer pour une case donnée, en respectant la
+ * catégorie attendue par le type réel de la case (voir CARD_TILE_TYPES).
+ * La case Anniversaire est déterministe (pas de pioche dans le vrai jeu : on
+ * reçoit toujours le même cadeau en arrivant dessus) ; les autres tirent au
+ * hasard dans le paquet correspondant.
+ */
+export function pickCardForTile(tileType: TileType): CardDefinition | null {
+  if (tileType === "anniversaire") {
+    return sampleCards.find((c) => c.id === "ann-001") ?? null;
+  }
+  const categoryByTile: Partial<Record<TileType, CardDefinition["category"]>> = {
+    courrier: "courrier",
+    acquisition: "investir",
+    evenement: "evenement",
+  };
+  const category = categoryByTile[tileType];
+  if (!category) return null;
+  const pool = sampleCards.filter((c) => c.category === category);
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+const TILE_LABEL: Record<TileType, string> = {
+  depart: "Départ",
+  dimanche: "Dimanche",
+  courrier: "Courrier",
+  acquisition: "Acquisition",
+  vendez: "Vendez !",
+  evenement: "Quoi de neuf ?",
+  loterie: "Loterie",
+  anniversaire: "Joyeux anniversaire",
+  cotisation: "Frais d'inscription",
+  cagnotte: "Cagnotte de la Bonne Paye",
+  "changement-heure": "Changement d'heure",
+  paie: "Jour de paie",
+};
+
+/** Cases rares — un seul exemplaire chacune, réparties tous les 5 jours. */
+const RARE_SEQUENCE: TileType[] = ["loterie", "anniversaire", "cotisation", "cagnotte", "changement-heure"];
+
+/**
+ * Cases courantes, dans des proportions proches des paquets réels de la
+ * notice (Courrier 50 cartes, Acquisition 23, Évènement 23 — Courrier est
+ * donc deux fois plus fréquent) ; Vendez complète le cycle car la vente
+ * d'une Acquisition est l'autre moitié de cette mécanique.
+ */
+const COMMON_CYCLE: TileType[] = ["courrier", "acquisition", "evenement", "courrier", "vendez"];
 
 /**
  * Disposition du plateau — parcours en spirale carrée se resserrant vers un
  * médaillon central (case de fin de mois), à l'image de la LOGIQUE DE
  * PARCOURS observée sur un plateau physique de référence.
  *
- * La notice officielle confirme QUE chaque case du plateau a une action (type
- * Courrier / Acquisition / Vendez / Quoi de neuf / Loterie / Anniversaire /
- * Cagnotte / Changement d'heure / Dimanche), mais ne publie pas la disposition
- * exacte (quel numéro de case fait quoi) — ce détail reste une composition
- * ORIGINALE et CONFIGURABLE de ce projet, conformément au brief : il ne s'agit
- * pas d'une valeur « en attente de vérification », mais d'un choix de design
- * assumé qui ne sera jamais calqué sur l'édition de référence.
+ * La notice officielle confirme QUE chaque case du plateau a une action
+ * (Courrier / Acquisition / Vendez / Quoi de neuf / Loterie / Anniversaire /
+ * Frais collectifs / Cagnotte / Changement d'heure / Dimanche), et donne même
+ * deux points fixes exploitables : la case 25 est une case ACQUISITION, et la
+ * case 31 (Changement d'heure) renvoie vers JOUR DE PAYE. En dehors de ces
+ * repères, la notice ne publie pas la disposition complète (quel numéro de
+ * case fait quoi exactement) — la répartition ci-dessous est donc une
+ * composition originale qui respecte les mécaniques et proportions connues,
+ * pas une recopie case-par-case de l'édition de référence.
  */
 export function buildDraftBoardLayout(daysPerMonth: number): TileDefinition[] {
   const total = daysPerMonth + 1; // case Départ + N jours
   const { tiles: spiral } = computeSpiralLayout(total);
+  const lastIndex = spiral.length - 1;
+  const acquisitionConfirmedIndex = Math.min(25, lastIndex - 1);
 
-  return spiral.map((cell, i): TileDefinition => {
-    if (i === 0) {
-      return {
-        id: "depart",
-        index: i,
-        type: "depart",
-        label: "Départ",
-        status: "configurable",
-        source: { reference: "Notice Hasbro officielle, section PRÉPARATION — case DÉPART confirmée ; position originale" },
-      };
-    }
-    if (i === spiral.length - 1) {
-      return {
-        id: "paie",
-        index: i,
-        type: "paie",
-        label: "Jour de paie",
-        status: "configurable",
-        source: { reference: "Notice Hasbro officielle, section JOUR DE PAYE — case confirmée ; position originale" },
-      };
-    }
-    const isEvent = cell.isTurn && i % 2 === 0;
-    return {
-      id: `jour-${i}`,
+  let rareCursor = 0;
+  let commonCursor = 0;
+
+  return spiral.map((_cell, i): TileDefinition => {
+    const make = (type: TileType, source: TileDefinition["source"]): TileDefinition => ({
+      id: `${type}-${i}`,
       index: i,
-      type: isEvent ? "evenement" : "jour",
-      label: isEvent ? `Jour ${i} — Événement` : `Jour ${i}`,
+      type,
+      label: type === "depart" || type === "paie" ? TILE_LABEL[type] : `${TILE_LABEL[type]} (jour ${i})`,
       status: "configurable",
-      source: {
-        reference: "Disposition originale — répartition exacte des cases non publiée par la notice",
-      },
-    };
+      source,
+    });
+
+    if (i === 0) {
+      return make("depart", { reference: "Notice Hasbro officielle, section PRÉPARATION — case DÉPART confirmée ; position originale" });
+    }
+    if (i === lastIndex) {
+      return make("paie", { reference: "Notice Hasbro officielle, section JOUR DE PAYE — case confirmée ; position originale" });
+    }
+    if (i % 7 === 0) {
+      return make("dimanche", {
+        reference: "Notice Hasbro officielle, section LE PLATEAU",
+        note: "Citation exacte : « Seule la case Dimanche vous permet de vous reposer. » Position alignée sur un vrai calendrier (tous les 7 jours), originale.",
+      });
+    }
+    if (i === acquisitionConfirmedIndex) {
+      return make("acquisition", {
+        reference: "Notice Hasbro officielle, section CHANGEMENT D'HEURE",
+        note: "Citation exacte : « revenez alors à la case d'ACQUISITION du 25 » — position de cette case confirmée par la notice elle-même.",
+      });
+    }
+    if (i % 5 === 2 && rareCursor < RARE_SEQUENCE.length) {
+      const type = RARE_SEQUENCE[rareCursor++];
+      return make(type, {
+        reference: "Notice Hasbro officielle, section LE PLATEAU",
+        note: "Mécanique et nom de case confirmés par la notice ; position le long du parcours originale.",
+      });
+    }
+    const type = COMMON_CYCLE[commonCursor++ % COMMON_CYCLE.length];
+    return make(type, {
+      reference: "Notice Hasbro officielle, section LE PLATEAU",
+      note: "Mécanique et nom de case confirmés par la notice ; position le long du parcours originale.",
+    });
   });
 }
 

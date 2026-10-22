@@ -7,6 +7,7 @@ import { OpponentsPanel } from "@/components/hud/OpponentsPanel";
 import { ActionPanel } from "@/components/hud/ActionPanel";
 import { GameBoard } from "@/components/board/GameBoard";
 import { CardOverlay } from "@/components/board/CardOverlay";
+import { TransactionToasts } from "@/components/hud/TransactionToasts";
 import { useGameStore } from "@/game/store/useGameStore";
 import { useLobbyStore } from "@/game/store/useLobbyStore";
 import { useSfx } from "@/lib/audio/useSfx";
@@ -76,6 +77,7 @@ export default function PartiePage({ params }: { params: Promise<{ code: string 
       </p>
 
       <CardOverlay />
+      <TransactionToasts />
     </div>
   );
 }
