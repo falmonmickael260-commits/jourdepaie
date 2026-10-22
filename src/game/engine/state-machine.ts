@@ -40,21 +40,39 @@ export function reduceGame(state: GameState, action: GameAction): GameState {
       const total = action.dice[0] + action.dice[1];
       const activePlayer = state.players[state.activePlayerIndex];
       const boardLength = state.board.length;
-      // Simplification en attente de vérification : le plateau de référence est une
-      // spirale à sens unique (Départ -> Jour de paie), pas une boucle. Le bouclage
-      // modulo ci-dessous est un choix d'implémentation provisoire, pas une règle confirmée.
-      const nextPosition = (activePlayer.position + total) % boardLength;
+      const lastIndex = boardLength - 1; // case "Jour de paie"
+      const rawNext = activePlayer.position + total;
+      // Le plateau est une spirale à sens unique (Départ -> Jour de paie), pas une
+      // boucle fermée : un lancer qui franchit la dernière case sans s'y arrêter
+      // pile doit quand même déclencher la paie — sans quoi un joueur peut passer
+      // par-dessus Jour de paie sans jamais toucher son salaire, ce qui contredit
+      // la mécanique centrale du jeu (« à chaque passage sur la case de paie »).
+      const crossedPayday = rawNext > lastIndex;
+      const nextPosition = rawNext % boardLength;
+
+      let nextState: GameState = {
+        ...state,
+        lastRoll: action.dice,
+        phase: "moving",
+        players: state.players.map((p, i) =>
+          i === state.activePlayerIndex ? { ...p, position: nextPosition } : p
+        ),
+      };
+
+      if (crossedPayday) {
+        nextState = applyTransaction(nextState, {
+          id: `salary-pass-${state.gameId}-${state.month}-${state.day}-${activePlayer.id}`,
+          playerId: activePlayer.id,
+          reason: "Jour de paie (passage)",
+          mutate: (acc) => creditCash(acc, economyRules.salary.value),
+        });
+      }
 
       return log(
-        {
-          ...state,
-          lastRoll: action.dice,
-          phase: "moving",
-          players: state.players.map((p, i) =>
-            i === state.activePlayerIndex ? { ...p, position: nextPosition } : p
-          ),
-        },
-        `${activePlayer.name} lance les dés : ${action.dice[0]} + ${action.dice[1]} = ${total}.`
+        nextState,
+        crossedPayday
+          ? `${activePlayer.name} lance les dés : ${action.dice[0]} + ${action.dice[1]} = ${total} et passe par Jour de paie : +${economyRules.salary.value} €.`
+          : `${activePlayer.name} lance les dés : ${action.dice[0]} + ${action.dice[1]} = ${total}.`
       );
     }
 

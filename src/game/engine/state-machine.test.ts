@@ -61,6 +61,26 @@ describe("reduceGame — contrôle de phase", () => {
     expect(next.players[0].position).toBe((26 + 12) % boardLength);
   });
 
+  it("verse le salaire dès le lancer quand le déplacement franchit Jour de paie sans s'y arrêter", () => {
+    const lastIndex = buildDraftBoardLayout(economyRules.daysPerMonth.value).length - 1;
+    // Position choisie pour que position + dés dépasse strictement lastIndex
+    // sans jamais l'égaler : le joueur ne s'arrête pas sur la case de paie.
+    const state = makeState({ players: makeState().players.map((p) => ({ ...p, position: lastIndex - 5 })) });
+    const next = reduceGame(state, { type: "ROLL_DICE", dice: [6, 6] }); // total 12, dépasse lastIndex de 6
+    expect(next.players[0].position).not.toBe(lastIndex);
+    expect(next.players[0].account.cash).toBe(1000 + economyRules.salary.value);
+  });
+
+  it("ne verse pas le salaire deux fois quand le déplacement s'arrête pile sur Jour de paie", () => {
+    const lastIndex = buildDraftBoardLayout(economyRules.daysPerMonth.value).length - 1;
+    const state = makeState({ players: makeState().players.map((p) => ({ ...p, position: lastIndex - 5 })) });
+    let next = reduceGame(state, { type: "ROLL_DICE", dice: [2, 3] }); // total 5, arrive pile sur lastIndex
+    expect(next.players[0].position).toBe(lastIndex);
+    expect(next.players[0].account.cash).toBe(1000); // pas encore versé au lancer : seulement à la résolution de la case
+    next = reduceGame({ ...next, phase: "resolving-tile" }, { type: "RESOLVE_TILE" });
+    expect(next.players[0].account.cash).toBe(1000 + economyRules.salary.value);
+  });
+
   it("verse le salaire de façon idempotente en atteignant la case Jour de paie", () => {
     const lastIndex = buildDraftBoardLayout(economyRules.daysPerMonth.value).length - 1;
     let state = makeState({ phase: "resolving-tile", players: makeState().players.map((p) => ({ ...p, position: lastIndex })) });
